@@ -1,160 +1,208 @@
 // ============================================================================
-// القاموس الشامل (يحتوي على نصوص الصفحة الرئيسية + صفحة الدخول)
+// القاموس الشامل (يحتوي على نصوص النظام بالكامل)
 // ============================================================================
-const translations = {
+export const translations = {
     en: {
-        // ------------------ Shared & Navbar ------------------
+        // --- Shared & General ---
         langBtn: "العربية",
         logo: "ResQ",
-        
-        // ------------------ Login Page ------------------
-        title: "Welcome Back",
-        subtitle: "Enter your credentials to access the portal.",
-        email: "Email Address",
-        password: "Password",
-        forgotPassword: "Forgot?",
-        signInBtn: "Sign In",
-        systemStatus: "System Online • 99.9% Uptime",
-        loginHeroTitle: "Intelligent <span class='text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-primary'>Emergency</span> Coordination.",
-        loginHeroDesc: "ResQ platform automates accident detection, instantly confirming incidents and dispatching the nearest ambulance within seconds.",
-        activeAmbulances: "Active Ambulances",
-        avgResponseTime: "Avg Response Time",
-        incidentDetected: "Incident Confirmed (#892)",
-        routingAction: "Auto-routing Unit 7 to City Hospital...",
+        loading: "Loading...",
+        processing: "Processing...",
+        save: "Save",
+        cancel: "Cancel",
+        close: "Close",
+        delete: "Delete",
+        edit: "Edit",
+        view: "View",
+        status: "Status",
+        actions: "Actions",
 
-        // ------------------ Index Page (Landing) ------------------
-        navHome: "Home",
-        navTrack: "Track Patient",
-        navHow: "How it Works",
-        navLogin: "Login Portal",
+        // --- Admin Global UI ---
+        desktopOnly: "Desktop & Tablet Only",
+        desktopOnlyDesc: "Command Center requires a larger screen for real-time map telemetry.",
+        returnHome: "Return to Home",
+        adminTitle: "ResQ Admin",
+        aiDispatch: "AI Dispatch Live",
+        maximizeMap: "Maximize Map",
+        showPanels: "Show Panels",
         
-        liveBadge: "Live Emergency Grid Active",
-        mainHeroTitle: "Every Second <br> <span class='text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-primary'>Counts.</span>",
-        mainHeroDesc: "ResQ instantly detects accidents, bypasses traffic, and dispatches the nearest ambulance before anyone even dials for help.",
-        btnTrack: "Track an Incident",
-        simTitle: "Live Routing Engine",
-        
-        searchTitle: "Track Patient Status",
-        searchDesc: "Enter the unique Device UID to check the real-time status and destination hospital of the patient.",
-        deviceUid: "Device UID (128-chars or shortcode)",
-        btnSearch: "Search Database",
-        
-        howTitle: "The ResQ Workflow",
-        step1Title: "Hardware Detection",
-        step1Desc: "G-Force sensors detect impact instantly and send coordinates.",
-        step2Title: "10-Sec Verification",
-        step2Desc: "A 10s timer allows driver cancellation to prevent false alarms.",
-        step3Title: "Auto-Dispatch",
-        step3Desc: "Our algorithm finds the nearest available ambulance instantly.",
-        step4Title: "Hospital Alert",
-        adminTitle: "Command Center",
+        // --- Sidebar ---
         navDash: "Dashboard",
-        navIncidents: "Incidents",
-        navAmbulances: "Ambulances",
-        navHospitals: "Hospitals",
-        navDevices: "Devices",
         navUsers: "Users",
-        navAdmins: "Admins",
-        navLogs: "Logs & Activity",
-        navSettings: "Settings",
-        activeIncidents: "Active Incidents",
-        fleetStatus: "Fleet Status",
-        liveMap: "Live Telemetry Map",
-        searchPlaceholder: "Search ID, Plate...",
-        step4Desc: "Nearest hospital receives patient data to prepare ER instantly."
+        navHospitals: "Hospitals",
+        navAmbulances: "Ambulances",
+
+        // --- Dashboard Module ---
+        dashIncidents: "Incidents",
+        dashFleet: "Fleet",
+        dashDevices: "Active Devices",
+        searchDevicePlaceholder: "Search ID or Owner...",
+        panelDetailsTitle: "Details",
+
+        // --- Users Module ---
+        usersTitle: "Users Management",
+        usersDesc: "Manage drivers, hospitals, admins, and app users.",
+        addNewUser: "Add New User",
+        searchUsers: "Search Name, Email, ID...",
+        allRoles: "All Roles",
+        allStatus: "All Status",
+        active: "Active",
+        suspended: "Suspended",
+        id: "ID",
+        name: "Name",
+        email: "Email",
+        phone: "Phone",
+        role: "Role",
+
+        // --- Hospitals Module ---
+        hospTitle: "Hospitals Network",
+        hospDesc: "Manage facilities, locations, and real-time bed capacities.",
+        addHosp: "Add Hospital",
+        searchHosp: "Search Name, City, ID...",
+        allCapacities: "All Capacities",
+        bedsAvailable: "Beds Available",
+        fullBeds: "Full (0 Beds)",
+        hospName: "Hospital Name",
+        location: "Location",
+        availBeds: "Available Beds",
+        adminAcc: "Admin Account",
+
+        // --- Ambulances Module ---
+        ambTitle: "Fleet Management",
+        ambDesc: "Manage ambulance units, drivers, and dispatch base zones.",
+        addAmb: "Add Unit",
+        searchAmb: "Search Code, Driver...",
+        mapFilter: "Map Filter",
+        unitCode: "Unit Code",
+        assignedDriver: "Assigned Driver",
+        baseZone: "Base Zone"
     },
     ar: {
-        // ------------------ Shared & Navbar ------------------
+        // --- Shared & General ---
         langBtn: "English",
         logo: "ريسكيو",
+        loading: "جاري التحميل...",
+        processing: "جاري المعالجة...",
+        save: "حفظ",
+        cancel: "إلغاء",
+        close: "إغلاق",
+        delete: "حذف",
+        edit: "تعديل",
+        view: "عرض",
+        status: "الحالة",
+        actions: "الإجراءات",
 
-        // ------------------ Login Page ------------------
-        title: "مرحباً بعودتك",
-        subtitle: "أدخل بياناتك للوصول إلى لوحة التحكم.",
-        email: "البريد الإلكتروني",
-        password: "كلمة المرور",
-        forgotPassword: "نسيت الكلمة؟",
-        signInBtn: "تسجيل الدخول",
-        systemStatus: "النظام متصل • 99.9% جاهزية",
-        loginHeroTitle: "تنسيق <span class='text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-primary'>ذكي</span> لحالات الطوارئ.",
-        loginHeroDesc: "منصة ResQ تعمل على أتمتة اكتشاف الحوادث، وتأكيدها فوراً، وتوجيه أقرب سيارة إسعاف في غضون ثوانٍ معدودة.",
-        activeAmbulances: "سيارات الإسعاف النشطة",
-        avgResponseTime: "متوسط وقت الاستجابة",
-        incidentDetected: "تم تأكيد حادث (#892)",
-        routingAction: "توجيه تلقائي للوحدة 7 إلى مستشفى المدينة...",
-adminTitle: "غرفة التحكم",
-        navDash: "الرئيسية",
-        navIncidents: "الحوادث",
-        navAmbulances: "الإسعافات",
-        navHospitals: "المستشفيات",
-        navDevices: "الأجهزة",
+        // --- Admin Global UI ---
+        desktopOnly: "للكمبيوتر والتابلت فقط",
+        desktopOnlyDesc: "غرفة التحكم تتطلب شاشة أكبر لعرض الخريطة والتتبع اللحظي.",
+        returnHome: "العودة للرئيسية",
+        adminTitle: "إدارة ريسكيو",
+        aiDispatch: "توجيه ذكي نشط",
+        maximizeMap: "تكبير الخريطة",
+        showPanels: "إظهار القوائم",
+        
+        // --- Sidebar ---
+        navDash: "لوحة القيادة",
         navUsers: "المستخدمين",
-        navAdmins: "المديرين",
-        navLogs: "سجل العمليات",
-        navSettings: "الإعدادات",
-        activeIncidents: "الحوادث النشطة",
-        fleetStatus: "حالة الأسطول",
-        liveMap: "خريطة التتبع اللحظي",
-        searchPlaceholder: "بحث برقم الحادث، اللوحة...",
-        // ------------------ Index Page (Landing) ------------------
-        navHome: "الرئيسية",
-        navTrack: "تتبع مريض",
-        navHow: "كيف نعمل",
-        navLogin: "بوابة الدخول",
-        
-        liveBadge: "شبكة الطوارئ الحية مفعلة",
-        mainHeroTitle: "كل ثانية <br> <span class='text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-primary'>فارقة.</span>",
-        mainHeroDesc: "يقوم النظام باكتشاف الحوادث فوراً، وتجاوز الزحام، وتوجيه أقرب سيارة إسعاف قبل حتى أن يطلب أحد المساعدة.",
-        btnTrack: "تتبع حالة حادث",
-        simTitle: "محرك التوجيه اللحظي",
-        
-        searchTitle: "تتبع حالة المريض",
-        searchDesc: "أدخل الرقم التعريفي للجهاز (Device UID) لمعرفة الحالة اللحظية للمريض والمستشفى الموجه إليها.",
-        deviceUid: "الرقم التعريفي (Device UID)",
-        btnSearch: "البحث في النظام",
-        
-        howTitle: "كيف يعمل النظام؟",
-        step1Title: "رصد فوري للحادث",
-        step1Desc: "مستشعرات الجاذبية ترصد الاصطدام فوراً وترسل الإحداثيات.",
-        step2Title: "تأكيد الـ 10 ثواني",
-        step2Desc: "مؤقت 10 ثوانٍ يتيح للسائق إلغاء الإنذار لمنع البلاغات الكاذبة.",
-        step3Title: "التوجيه التلقائي",
-        step3Desc: "خوارزمياتنا تبحث عن أقرب سيارة إسعاف متاحة وتقوم بتوجيهها.",
-        step4Title: "تنبيه المستشفى",
-        step4Desc: "المستشفى الأقرب يتلقى بيانات الحالة لتجهيز الطوارئ قبل وصولها."
+        navHospitals: "المستشفيات",
+        navAmbulances: "الإسعافات",
+
+        // --- Dashboard Module ---
+        dashIncidents: "الحوادث",
+        dashFleet: "الأسطول",
+        dashDevices: "الأجهزة النشطة",
+        searchDevicePlaceholder: "بحث بالمعرف أو المالك...",
+        panelDetailsTitle: "التفاصيل",
+
+        // --- Users Module ---
+        usersTitle: "إدارة المستخدمين",
+        usersDesc: "إدارة السائقين، المستشفيات، المديرين، ومستخدمي التطبيق.",
+        addNewUser: "إضافة مستخدم",
+        searchUsers: "بحث بالاسم، الإيميل، ID...",
+        allRoles: "جميع الصلاحيات",
+        allStatus: "جميع الحالات",
+        active: "نشط",
+        suspended: "موقوف",
+        id: "الرقم",
+        name: "الاسم",
+        email: "البريد الإلكتروني",
+        phone: "الهاتف",
+        role: "الصلاحية",
+
+        // --- Hospitals Module ---
+        hospTitle: "شبكة المستشفيات",
+        hospDesc: "إدارة المنشآت، المواقع، والسعة اللحظية للأسرة.",
+        addHosp: "إضافة مستشفى",
+        searchHosp: "بحث بالاسم، المدينة، ID...",
+        allCapacities: "جميع السعات",
+        bedsAvailable: "يوجد أسرة",
+        fullBeds: "ممتلئ (0 أسرة)",
+        hospName: "اسم المستشفى",
+        location: "الموقع",
+        availBeds: "الأسرة المتاحة",
+        adminAcc: "حساب الإدارة",
+
+        // --- Ambulances Module ---
+        ambTitle: "إدارة الأسطول",
+        ambDesc: "إدارة سيارات الإسعاف، السائقين، ونقاط التمركز.",
+        addAmb: "إضافة سيارة",
+        searchAmb: "بحث بالكود، السائق...",
+        mapFilter: "فلتر الخريطة",
+        unitCode: "كود السيارة",
+        assignedDriver: "السائق المعين",
+        baseZone: "نقطة التمركز"
     }
 };
 
-const langToggleBtn = document.getElementById('langToggleBtn');
-let currentLang = localStorage.getItem('resq_lang') || 'en';
+export let currentLang = localStorage.getItem('resq_lang') || 'en';
 
-function applyLanguage(lang) {
+// دالة تصدير لترجمة الكلمات داخل ملفات الـ JS
+export function t(key) {
+    return translations[currentLang][key] || key;
+}
+
+export function applyLanguage(lang) {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     
+    // ترجمة عناصر الـ HTML الثابتة
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
-            // استخدام innerHTML للحفاظ على التصميمات الفاخرة (Spans & Colors)
             el.innerHTML = translations[lang][key];
         }
     });
 
+    // ترجمة الـ Placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) {
+            el.placeholder = translations[lang][key];
+        }
+    });
+
+    const langToggleBtn = document.getElementById('langToggleBtn');
     if(langToggleBtn) {
         langToggleBtn.innerHTML = translations[lang].langBtn;
     }
 
-    document.querySelectorAll('input').forEach(input => {
+    // عكس اتجاه النصوص في الحقول (اختياري)
+    document.querySelectorAll('input:not([type="hidden"])').forEach(input => {
         input.style.textAlign = lang === 'ar' ? 'right' : 'left';
     });
 }
 
-langToggleBtn?.addEventListener('click', () => {
-    currentLang = currentLang === 'en' ? 'ar' : 'en';
-    localStorage.setItem('resq_lang', currentLang);
-    applyLanguage(currentLang);
-});
-
 document.addEventListener('DOMContentLoaded', () => {
+    const langToggleBtn = document.getElementById('langToggleBtn');
+    
+    langToggleBtn?.addEventListener('click', () => {
+        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        localStorage.setItem('resq_lang', currentLang);
+        applyLanguage(currentLang);
+        
+        // إرسال حدث (Event) لباقي الملفات لتحديث الجداول والنصوص الديناميكية
+        window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: currentLang } }));
+    });
+
     applyLanguage(currentLang);
 });

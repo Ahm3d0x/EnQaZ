@@ -4,18 +4,18 @@ const tbody = document.getElementById('hospitalsTableBody');
 const modal = document.getElementById('hospitalModal');
 const form = document.getElementById('hospitalForm');
 
-let allHospitals = [];
+let allHospitals = []; // تخزين محلي لسرعة البحث والفلترة
 let pickerMap = null;
 let pickerMarker = null;
 
 // ==========================================
-// 1. تحميل عرض البيانات
+// 1. تحميل عرض البيانات (مع دعم الفلترة)
 // ==========================================
 window.loadHospitalsData = async function() {
-    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i> Loading hospitals...</td></tr>';
     
-    // جلب المستشفيات مع اسم حساب الإدارة المربوط بها
-    const { data, error } = await supabase.from(DB_TABLES.HOSPITALS).select('*, users(name)').order('id', { ascending: false });
+    // جلب المستشفيات مع اسم حساب الإدارة ورقم هاتفه من جدول users
+    const { data, error } = await supabase.from(DB_TABLES.HOSPITALS).select('*, users(name, phone)').order('id', { ascending: false });
     
     if (error) {
         console.error("Error loading hospitals:", error);
@@ -24,20 +24,51 @@ window.loadHospitalsData = async function() {
     }
 
     allHospitals = data;
-    renderHospitalsTable();
+    applyHospFilters(); // نقوم برسم الجدول من خلال الفلتر لضمان تطبيق أي بحث مسبق
     loadHospitalAdmins(); // تجهيز قائمة الحسابات للنافذة المنبثقة
 };
 
-function renderHospitalsTable() {
-    if (allHospitals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 font-bold">No hospitals registered yet.</td></tr>';
+// ==========================================
+// 2. نظام البحث والفلترة اللحظي
+// ==========================================
+function applyHospFilters() {
+    const term = document.getElementById('hospSearchInput')?.value.toLowerCase() || "";
+    const bedFilter = document.getElementById('hospBedsFilter')?.value || "";
+
+    const filtered = allHospitals.filter(h => {
+        // البحث بالنص في الاسم، المدينة، أو الـ ID
+        const matchesSearch = h.name.toLowerCase().includes(term) || 
+                              (h.city && h.city.toLowerCase().includes(term)) || 
+                              h.id.toString().includes(term);
+        
+        // فلترة سعة الأسرة (الكل، متاح، أو ممتلئ)
+        let matchesBeds = true;
+        if (bedFilter === "available") matchesBeds = h.available_beds > 0;
+        else if (bedFilter === "full") matchesBeds = h.available_beds === 0;
+
+        return matchesSearch && matchesBeds;
+    });
+
+    renderHospitalsTable(filtered);
+}
+
+// ربط أحداث الإدخال بأدوات البحث والفلترة
+document.getElementById('hospSearchInput')?.addEventListener('input', applyHospFilters);
+document.getElementById('hospBedsFilter')?.addEventListener('change', applyHospFilters);
+
+// ==========================================
+// 3. رسم الجدول (Rendering)
+// ==========================================
+function renderHospitalsTable(data) {
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 font-bold">No hospitals match your search criteria.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = allHospitals.map(h => {
+    tbody.innerHTML = data.map(h => {
         // تلوين الأسرة (Capacity Color Indicator)
-        let bedColor = h.available_beds > 5 ? 'text-success bg-success/10' : 
-                       h.available_beds > 0 ? 'text-warning bg-warning/10' : 'text-red-500 bg-red-500/10';
+        let bedColor = h.available_beds > 5 ? 'text-success bg-success/10 border-success/30' : 
+                       h.available_beds > 0 ? 'text-warning bg-warning/10 border-warning/30' : 'text-red-500 bg-red-500/10 border-red-500/30';
         
         return `
         <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5">
@@ -46,16 +77,19 @@ function renderHospitalsTable() {
                 <i class="fa-solid fa-hospital text-blue-500 mr-1 text-xs"></i> ${h.name}
             </td>
             <td class="p-4 text-xs text-gray-600 dark:text-gray-300">
-                ${h.city}, ${h.governorate}
+                ${h.city || '-'}, ${h.governorate || '-'}
             </td>
             <td class="p-4 text-center">
-                <span class="px-3 py-1 rounded-lg text-sm font-black ${bedColor}">${h.available_beds}</span>
+                <span class="px-3 py-1 rounded-lg border text-sm font-black ${bedColor}">${h.available_beds}</span>
             </td>
             <td class="p-4 text-xs text-gray-500 dark:text-gray-400">
-                <i class="fa-solid fa-user-tie mr-1"></i> ${h.users?.name || '<span class="text-red-500">Unlinked</span>'}
+                <i class="fa-solid fa-user-tie mr-1"></i> ${h.users?.name || '<span class="text-red-500 font-bold">Unlinked</span>'}
             </td>
-            <td class="p-4 text-center">
+            <td class="p-4">
                 <div class="flex items-center justify-center gap-2">
+                    <button onclick="viewHospitalDetails(${h.id})" class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-blue-500 hover:text-white rounded-lg transition-colors shadow-sm" title="View Details">
+                        <i class="fa-solid fa-eye text-xs"></i>
+                    </button>
                     <button onclick="editHospital(${h.id})" class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-warning hover:text-white rounded-lg transition-colors shadow-sm" title="Edit">
                         <i class="fa-solid fa-pen text-xs"></i>
                     </button>
@@ -70,7 +104,45 @@ function renderHospitalsTable() {
 }
 
 // ==========================================
-// 2. جلب الحسابات ذات صلاحية 'hospital'
+// 4. عرض تفاصيل المستشفى (View Details Card)
+// ==========================================
+window.viewHospitalDetails = function(id) {
+    const h = allHospitals.find(x => x.id === id);
+    if(!h) return;
+
+    document.getElementById('viewHospitalDetailsContent').innerHTML = `
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Hospital ID</span> <span class="font-mono dark:text-white">#HSP-${h.id}</span>
+        </div>
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Hospital Name</span> <span class="font-bold dark:text-white">${h.name}</span>
+        </div>
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Location</span> <span class="dark:text-white">${h.city || '-'}, ${h.governorate || '-'}</span>
+        </div>
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Coordinates</span> <span class="font-mono text-xs text-blue-500">${h.lat?.toFixed(5) || 'N/A'}, ${h.lng?.toFixed(5) || 'N/A'}</span>
+        </div>
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Emergency Phone</span> <span class="font-mono dark:text-white">${h.phone || 'N/A'}</span>
+        </div>
+        <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span class="text-gray-500 font-bold">Admin Account</span> 
+            <span class="dark:text-white text-right">${h.users?.name || '<span class="text-red-500">Unlinked</span>'} <br> <span class="text-xs text-gray-500 font-mono">${h.users?.phone || ''}</span></span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-gray-500 font-bold">Available Beds</span> 
+            <span class="font-black text-xl ${h.available_beds > 0 ? 'text-success' : 'text-red-500'}">${h.available_beds}</span>
+        </div>
+    `;
+
+    const m = document.getElementById('viewHospitalDetailsModal');
+    m.classList.remove('hidden');
+    setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
+};
+
+// ==========================================
+// 5. جلب الحسابات ذات صلاحية 'hospital' للنافذة المنبثقة
 // ==========================================
 async function loadHospitalAdmins() {
     const { data } = await supabase.from(DB_TABLES.USERS).select('id, name').eq('role', 'hospital');
@@ -82,15 +154,13 @@ async function loadHospitalAdmins() {
 }
 
 // ==========================================
-// 3. خريطة اختيار الموقع (Map Picker) 🗺️
+// 6. خريطة اختيار الموقع (Map Picker) 🗺️
 // ==========================================
 function initPickerMap(lat = 30.0444, lng = 31.2357) {
     if (!pickerMap) {
-        // إنشاء الخريطة لأول مرة
         pickerMap = L.map('hospitalPickerMap').setView([lat, lng], 12);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(pickerMap);
         
-        // التقاط ضغطة الماوس (Click Event)
         pickerMap.on('click', function(e) {
             setPickerMarker(e.latlng.lat, e.latlng.lng);
         });
@@ -100,7 +170,6 @@ function initPickerMap(lat = 30.0444, lng = 31.2357) {
     
     setPickerMarker(lat, lng);
 
-    // سر مهم جداً: الخريطة بتتشوه لو اتفتحت داخل Modal مخفي، الـ invalidateSize بيعالج ده
     setTimeout(() => {
         pickerMap.invalidateSize();
     }, 250); 
@@ -110,13 +179,12 @@ function setPickerMarker(lat, lng) {
     if (pickerMarker) pickerMap.removeLayer(pickerMarker);
     pickerMarker = L.marker([lat, lng]).addTo(pickerMap);
     
-    // تحديث الحقول النصية أسفل الخريطة
     document.getElementById('hospLat').value = lat.toFixed(7);
     document.getElementById('hospLng').value = lng.toFixed(7);
 }
 
 // ==========================================
-// 4. العمليات الإدارية (Add, Edit, Delete)
+// 7. إدارة الإضافة والتعديل (Add, Edit)
 // ==========================================
 window.openHospitalModal = function() {
     form.reset();
@@ -129,7 +197,6 @@ window.openHospitalModal = function() {
         modal.children[0].classList.remove('scale-95');
     }, 10);
 
-    // فتح الخريطة على منتصف القاهرة كافتراضي
     initPickerMap(30.0444, 31.2357);
 };
 
@@ -143,9 +210,9 @@ window.editHospital = function(id) {
     document.getElementById('hospCity').value = hosp.city || '';
     document.getElementById('hospPhone').value = hosp.phone || '';
     document.getElementById('hospBeds').value = hosp.available_beds;
-    document.getElementById('hospUserId').value = hosp.user_id;
+    document.getElementById('hospUserId').value = hosp.user_id || '';
 
-    document.getElementById('hospitalModalTitle').innerText = 'Edit Hospital';
+    document.getElementById('hospitalModalTitle').innerText = 'Edit Hospital Details';
     
     modal.classList.remove('hidden');
     setTimeout(() => {
@@ -153,7 +220,6 @@ window.editHospital = function(id) {
         modal.children[0].classList.remove('scale-95');
     }, 10);
 
-    // فتح الخريطة على موقع المستشفى الحالي
     initPickerMap(hosp.lat || 30.0444, hosp.lng || 31.2357);
 };
 
@@ -166,7 +232,8 @@ window.closeHospitalModal = function() {
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('saveHospBtn');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    const originalText = btn.innerText;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
     btn.disabled = true;
 
     const id = document.getElementById('hospId').value;
@@ -176,7 +243,7 @@ form.addEventListener('submit', async (e) => {
         city: document.getElementById('hospCity').value,
         phone: document.getElementById('hospPhone').value,
         available_beds: parseInt(document.getElementById('hospBeds').value),
-        user_id: document.getElementById('hospUserId').value, // ضروري لربطه بالحساب
+        user_id: document.getElementById('hospUserId').value || null,
         lat: parseFloat(document.getElementById('hospLat').value),
         lng: parseFloat(document.getElementById('hospLng').value),
         country: 'Egypt'
@@ -192,19 +259,25 @@ form.addEventListener('submit', async (e) => {
         }
         
         closeHospitalModal();
-        window.loadHospitalsData();
+        await window.loadHospitalsData();
     } catch (error) {
         alert("Operation Failed: " + error.message);
     } finally {
-        btn.innerHTML = 'Save Hospital';
+        btn.innerHTML = originalText;
         btn.disabled = false;
     }
 });
 
+// ==========================================
+// 8. الحذف (Delete)
+// ==========================================
 window.deleteHospital = async function(id) {
-    if(confirm("Are you sure you want to remove this hospital from the network?")) {
+    if(confirm("DANGER: Are you sure you want to remove this hospital? This action cannot be undone.")) {
         const { error } = await supabase.from(DB_TABLES.HOSPITALS).delete().eq('id', id);
-        if(error) alert("Deletion Failed: " + error.message);
-        else window.loadHospitalsData();
+        if(error) {
+            alert("Deletion Failed: " + error.message);
+        } else {
+            await window.loadHospitalsData();
+        }
     }
 };

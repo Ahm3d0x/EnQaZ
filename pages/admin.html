@@ -15,162 +15,186 @@
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .leaflet-incident-marker { animation: pulse-red 2s infinite; border-radius: 50%; border: 3px solid #dc2626; background: rgba(220, 38, 38, 0.4); box-shadow: 0 0 15px #dc2626; }
         @keyframes pulse-red { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
-        .leaflet-marker-icon { transition: transform 0.5s linear; } 
     </style>
 </head>
 
-<body class="bg-surface dark:bg-[#020408] text-secondary dark:text-gray-200 h-screen w-full overflow-hidden flex font-sans transition-colors duration-500">
+<body class="bg-surface dark:bg-[#020408] text-secondary dark:text-gray-200 h-screen w-full overflow-hidden flex font-sans transition-colors duration-500 relative">
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 rtl:left-5 rtl:right-auto z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="mobileBlocker" class="fixed inset-0 z-[9999] bg-secondary flex flex-col items-center justify-center text-center p-6 md:hidden">
         <i class="fa-solid fa-desktop text-6xl text-primary mb-6 animate-bounce"></i>
-        <h2 class="text-3xl font-black text-white mb-2">Desktop & Tablet Only</h2>
-        <p class="text-gray-400 mb-8 max-w-sm">Command Center requires a larger screen for real-time map telemetry.</p>
-        <a href="../index.html" class="px-6 py-3 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-primary transition">Return to Home</a>
+        <h2 class="text-3xl font-black text-white mb-2" data-i18n="desktopOnly">Desktop & Tablet Only</h2>
+        <p class="text-gray-400 mb-8 max-w-sm" data-i18n="desktopOnlyDesc">Command Center requires a larger screen for real-time map telemetry.</p>
+        <a href="../index.html" class="px-6 py-3 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-primary transition" data-i18n="returnHome">Return to Home</a>
     </div>
 
-    <aside id="sidebar" class="w-64 bg-white dark:bg-gray-900 border-r dark:border-l border-gray-200 dark:border-white/10 flex flex-col transition-all duration-300 z-50">
+    <aside id="sidebar" class="w-64 bg-white dark:bg-gray-900 border-r rtl:border-l rtl:border-r-0 border-gray-200 dark:border-white/10 flex flex-col transition-all duration-300 z-50">
         <div class="h-16 flex items-center px-6 gap-3 border-b border-gray-200 dark:border-white/10 justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0"><i class="fa-solid fa-truck-medical"></i></div>
-                <span id="logoText" class="text-xl font-black tracking-tight dark:text-white whitespace-nowrap transition-opacity duration-300">ResQ Admin</span>
+                <span id="logoText" class="text-xl font-black tracking-tight dark:text-white whitespace-nowrap transition-opacity duration-300" data-i18n="adminTitle">ResQ Admin</span>
             </div>
             <button onclick="toggleLeftSidebar()" class="text-gray-500 hover:text-primary transition-colors"><i class="fa-solid fa-bars"></i></button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2" id="sidebarNav">
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-bold" data-module="dashboard">
-                <i class="fa-solid fa-chart-line w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300">Dashboard</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="users">
-                <i class="fa-solid fa-users w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300">Users</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="hospitals">
-                <i class="fa-solid fa-hospital w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300">Hospitals</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="ambulances">
-                <i class="fa-solid fa-truck-medical w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300">Ambulances</span>
-            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-bold" data-module="dashboard"><i class="fa-solid fa-chart-line w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navDash">Dashboard</span></a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="users"><i class="fa-solid fa-users w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navUsers">Users</span></a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="hospitals"><i class="fa-solid fa-hospital w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navHospitals">Hospitals</span></a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="ambulances"><i class="fa-solid fa-truck-medical w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navAmbulances">Ambulances</span></a>
         </nav>
     </aside>
 
     <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header class="h-16 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 z-40">
             <div class="flex items-center gap-4">
-                <div class="bg-success/10 border border-success/30 px-3 py-1 rounded-full flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                    <span class="text-xs font-bold text-success uppercase tracking-widest hidden sm:block">AI Dispatch Live</span>
-                </div>
+                <div class="bg-success/10 border border-success/30 px-3 py-1 rounded-full flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-success animate-pulse"></span><span class="text-xs font-bold text-success uppercase tracking-widest hidden sm:block" data-i18n="aiDispatch">AI Dispatch Live</span></div>
             </div>
             <div class="flex items-center gap-3">
-                <button id="themeToggleBtn" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary transition-transform hover:scale-110">
-                    <span id="themeIcon" class="text-xl">🌙</span>
-                </button>
-                <button id="langToggleBtn" class="font-bold text-sm px-3 py-1.5 bg-gray-100 dark:bg-white/5 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">
-                    AR
-                </button>
-                <button id="maximizeMapBtn" onclick="toggleRightSidebar()" class="px-3 py-1.5 text-gray-500 hover:text-primary bg-gray-100 dark:bg-white/5 rounded-lg ml-2 flex items-center gap-2 text-xs font-bold transition-colors">
-                    <i class="fa-solid fa-expand"></i> <span id="toggleMapBtnText">Maximize Map</span>
-                </button>
+                <button id="themeToggleBtn" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary transition-transform hover:scale-110"><span id="themeIcon" class="text-xl">🌙</span></button>
+                <button id="langToggleBtn" class="font-bold text-sm px-3 py-1.5 bg-gray-100 dark:bg-white/5 rounded-lg dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">AR</button>
+                <button id="maximizeMapBtn" onclick="toggleRightSidebar()" class="px-3 py-1.5 text-gray-500 hover:text-primary bg-gray-100 dark:bg-white/5 rounded-lg rtl:mr-2 ltr:ml-2 flex items-center gap-2 text-xs font-bold transition-colors"><i class="fa-solid fa-expand"></i> <span id="toggleMapBtnText" data-i18n="maximizeMap">Maximize Map</span></button>
             </div>
         </header>
 
         <main class="flex-1 p-4 overflow-hidden relative">
             
-            <div id="detailsPanel" class="absolute top-4 right-4 w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 transform translate-x-[120%] transition-transform duration-500 z-[500] flex flex-col gap-4">
-                <div class="flex justify-between items-center border-b dark:border-white/10 pb-3">
-                    <h3 id="panelTitle" class="font-black text-lg dark:text-white">Details</h3>
-                    <button onclick="document.getElementById('detailsPanel').classList.add('translate-x-[120%]')" class="text-gray-500 hover:text-primary"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <div id="panelContent" class="text-sm text-gray-600 dark:text-gray-300 space-y-3"></div>
-            </div>
-
             <div id="module-dashboard" class="h-full flex gap-4 w-full transition-opacity duration-300">
-                <div id="mapContainer" class="flex-1 bg-gray-900 rounded-2xl overflow-hidden relative shadow-lg transition-all duration-500">
-                    <div id="adminMap" class="w-full h-full bg-[#1a1a2e]"></div>
-                </div>
-
-                <div id="rightSidebar" class="w-96 flex flex-col gap-4 overflow-y-auto h-full pr-1 pb-4 transition-all duration-500 flex-shrink-0">
-                    
+                <div id="mapContainer" class="flex-1 bg-gray-900 rounded-2xl overflow-hidden relative shadow-lg transition-all duration-500"><div id="adminMap" class="w-full h-full bg-[#1a1a2e]"></div></div>
+                <div id="rightSidebar" class="w-96 flex flex-col gap-4 overflow-y-auto h-full ltr:pr-1 rtl:pl-1 pb-4 transition-all duration-500 flex-shrink-0">
                     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg flex flex-col flex-shrink-0 transition-all duration-300" style="max-height: 50vh;">
-                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('incidentsBody', 'incIcon')">
-                            <h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-triangle-exclamation text-primary mr-2"></i> Incidents</h3>
-                            <div class="flex items-center gap-3">
-                                <span id="pendingCountBadge" class="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full font-bold">0</span>
-                                <i id="incIcon" class="fa-solid fa-chevron-up text-gray-400"></i>
-                            </div>
-                        </div>
+                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('incidentsBody', 'incIcon')"><h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-triangle-exclamation text-primary ltr:mr-2 rtl:ml-2"></i> <span data-i18n="dashIncidents">Incidents</span></h3><div class="flex items-center gap-3"><span id="pendingCountBadge" class="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full font-bold">0</span><i id="incIcon" class="fa-solid fa-chevron-up text-gray-400"></i></div></div>
                         <div id="incidentsBody" class="overflow-y-auto p-2 space-y-2 transition-all"></div>
                     </div>
-
                     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg flex flex-col flex-shrink-0 transition-all duration-300" style="max-height: 40vh;">
-                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('ambBody', 'ambIcon')">
-                            <h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-truck-fast text-success mr-2"></i> Fleet</h3>
-                            <i id="ambIcon" class="fa-solid fa-chevron-up text-gray-400"></i>
-                        </div>
+                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('ambBody', 'ambIcon')"><h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-truck-fast text-success ltr:mr-2 rtl:ml-2"></i> <span data-i18n="dashFleet">Fleet</span></h3><i id="ambIcon" class="fa-solid fa-chevron-up text-gray-400"></i></div>
                         <div id="ambBody" class="overflow-y-auto p-2 space-y-2 transition-all"></div>
                     </div>
-
                     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg flex flex-col flex-shrink-0 transition-all duration-300 min-h-[250px]">
-                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('devBody', 'devIcon')">
-                            <h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-car text-blue-500 mr-2"></i> Active Devices</h3>
-                            <i id="devIcon" class="fa-solid fa-chevron-up text-gray-400"></i>
-                        </div>
+                        <div class="p-3 border-b dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 cursor-pointer sticky top-0 z-10" onclick="toggleSection('devBody', 'devIcon')"><h3 class="font-bold text-sm dark:text-white"><i class="fa-solid fa-car text-blue-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="dashDevices">Active Devices</span></h3><i id="devIcon" class="fa-solid fa-chevron-up text-gray-400"></i></div>
                         <div id="devBody" class="flex flex-col flex-1 overflow-hidden transition-all">
-                            <div class="p-2 border-b dark:border-white/5">
-                                <input type="text" id="deviceSearchInput" placeholder="Search ID or Owner..." class="w-full bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg outline-none text-white focus:ring-1 focus:ring-blue-500">
-                            </div>
+                            <div class="p-2 border-b dark:border-white/5"><input type="text" id="deviceSearchInput" data-i18n-placeholder="searchDevicePlaceholder" placeholder="Search ID or Owner..." class="w-full bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg outline-none text-gray-800 dark:text-white focus:ring-1 focus:ring-blue-500"></div>
                             <div id="devicesPanelList" class="overflow-y-auto p-2 space-y-2 flex-1"></div>
                         </div>
                     </div>
-
+                </div>
+                <div id="detailsPanel" class="absolute top-4 right-4 rtl:left-4 rtl:right-auto w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 transform translate-x-[120%] rtl:-translate-x-[120%] transition-transform duration-500 z-[500] flex flex-col gap-4">
+                    <div class="flex justify-between items-center border-b dark:border-white/10 pb-3"><h3 id="panelTitle" class="font-black text-lg dark:text-white" data-i18n="panelDetailsTitle">Details</h3><button onclick="document.getElementById('detailsPanel').classList.add(document.documentElement.dir === 'rtl' ? '-translate-x-[120%]' : 'translate-x-[120%]')" class="text-gray-500 hover:text-primary"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+                    <div id="panelContent" class="text-sm text-gray-600 dark:text-gray-300 space-y-3"></div>
                 </div>
             </div>
 
             <div id="module-users" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
-                
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex-shrink-0">
-                        <h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-users text-blue-500 mr-2"></i> Users Management</h2>
-                    </div>
-                    
+                    <div class="flex-shrink-0"><h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-users text-blue-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="usersTitle">Users Management</span></h2></div>
                     <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
                         <div class="relative">
-                            <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="userSearchInput" placeholder="Search Name, Email, ID..." class="pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64 transition-all">
+                            <i class="fa-solid fa-search absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="userSearchInput" data-i18n-placeholder="searchUsers" placeholder="Search Name, Email, ID..." class="ltr:pl-9 rtl:pr-9 ltr:pr-4 rtl:pl-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64 transition-all">
                         </div>
                         <select id="roleFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="">All Roles</option>
-                            <option value="admin">Admins</option>
-                            <option value="hospital">Hospitals</option>
-                            <option value="driver">Drivers</option>
-                            <option value="user">Users</option>
+                            <option value="" data-i18n="allRoles">All Roles</option>
+                            <option value="admin" data-i18n="roleAdmin">Admins</option>
+                            <option value="hospital" data-i18n="roleHospital">Hospitals</option>
+                            <option value="driver" data-i18n="roleDriver">Drivers</option>
+                            <option value="user" data-i18n="roleUser">Users</option>
                         </select>
                         <select id="statusFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="">All Status</option>
-                            <option value="true">Active</option>
-                            <option value="false">Suspended</option>
+                            <option value="" data-i18n="allStatus">All Status</option>
+                            <option value="true" data-i18n="active">Active</option>
+                            <option value="false" data-i18n="suspended">Suspended</option>
                         </select>
-                        <button onclick="openUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2">
-                            <i class="fa-solid fa-plus"></i> Add New
-                        </button>
+                        <button onclick="openUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span data-i18n="addNewUser">Add New</span></button>
                     </div>
                 </div>
-
                 <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
                     <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                        <table class="w-full text-left rtl:text-right text-sm text-gray-600 dark:text-gray-300">
                             <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
                                 <tr>
-                                    <th class="p-4 font-bold">ID</th>
-                                    <th class="p-4 font-bold">Name</th>
-                                    <th class="p-4 font-bold">Email</th>
-                                    <th class="p-4 font-bold">Phone</th>
-                                    <th class="p-4 font-bold">Role</th>
-                                    <th class="p-4 font-bold">Status</th>
-                                    <th class="p-4 font-bold text-center">Actions</th>
+                                    <th class="p-4 font-bold" data-i18n="colId">ID</th>
+                                    <th class="p-4 font-bold" data-i18n="colName">Name</th>
+                                    <th class="p-4 font-bold" data-i18n="colEmail">Email</th>
+                                    <th class="p-4 font-bold" data-i18n="colPhone">Phone</th>
+                                    <th class="p-4 font-bold" data-i18n="colRole">Role</th>
+                                    <th class="p-4 font-bold" data-i18n="colStatus">Status</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colActions">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="usersTableBody" class="divide-y divide-gray-100 dark:divide-white/5">
-                                </tbody>
+                            <tbody id="usersTableBody" class="divide-y divide-gray-100 dark:divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-hospitals" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex-shrink-0"><h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-hospital text-blue-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="hospTitle">Hospitals Network</span></h2></div>
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                        <button onclick="openHospMapFilterModal()" id="hospMapFilterBtnActive" class="bg-blue-600/20 text-blue-500 border border-blue-500/50 hover:bg-blue-600 hover:text-white font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"><i class="fa-solid fa-map-location-dot"></i> <span data-i18n="mapFilter">Map Filter</span></button>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="hospSearchInput" data-i18n-placeholder="searchHosp" placeholder="Search Name, City, ID..." class="ltr:pl-9 rtl:pr-9 ltr:pr-4 rtl:pl-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-56 transition-all">
+                        </div>
+                        <select id="hospBedsFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="" data-i18n="allCapacities">All Capacities</option>
+                            <option value="available" data-i18n="bedsAvailable">Beds Available</option>
+                            <option value="full" data-i18n="fullBeds">Full (0 Beds)</option>
+                        </select>
+                        <button onclick="openHospitalModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span data-i18n="addHosp">Add Hospital</span></button>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left rtl:text-right text-sm text-gray-600 dark:text-gray-300">
+                            <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-4 font-bold" data-i18n="colId">ID</th>
+                                    <th class="p-4 font-bold" data-i18n="colHospName">Hospital Name</th>
+                                    <th class="p-4 font-bold" data-i18n="colLocation">Location</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colAvailBeds">Available Beds</th>
+                                    <th class="p-4 font-bold" data-i18n="colAdminAcc">Admin Account</th> 
+                                    <th class="p-4 font-bold text-center" data-i18n="colActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hospitalsTableBody" class="divide-y divide-gray-100 dark:divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="module-ambulances" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex flex-col lg:flex-row justify-between items-center gap-4">
+                    <div class="flex-shrink-0"><h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-truck-medical text-success ltr:mr-2 rtl:ml-2"></i> <span data-i18n="ambTitle">Fleet Management</span></h2></div>
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                        <button onclick="openMapFilterModal()" id="mapFilterBtnActive" class="bg-purple-600/20 text-purple-500 border border-purple-500/50 hover:bg-purple-600 hover:text-white font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"><i class="fa-solid fa-map-location-dot"></i> <span data-i18n="mapFilter">Map Filter</span></button>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="ambSearchInput" data-i18n-placeholder="searchAmb" placeholder="Search Code, Driver..." class="ltr:pl-9 rtl:pr-9 ltr:pr-4 rtl:pl-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-success w-full md:w-48 transition-all">
+                        </div>
+                        <select id="ambStatusFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-success cursor-pointer">
+                            <option value="" data-i18n="allStatus">All Status</option>
+                            <option value="available" data-i18n="statusAvail">Available</option>
+                            <option value="en_route_incident" data-i18n="statusEnRouteInc">En Route Incident</option>
+                            <option value="en_route_hospital" data-i18n="statusEnRouteHosp">En Route Hospital</option>
+                            <option value="offline" data-i18n="statusOffline">Offline</option>
+                        </select>
+                        <button onclick="openAmbulanceModal()" class="bg-success hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span data-i18n="addAmb">Add Unit</span></button>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left rtl:text-right text-sm text-gray-600 dark:text-gray-300">
+                            <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-4 font-bold" data-i18n="colUnitCode">Unit Code</th>
+                                    <th class="p-4 font-bold" data-i18n="colDriver">Assigned Driver</th>
+                                    <th class="p-4 font-bold" data-i18n="colBaseZone">Base Zone</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colStatus">Status</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ambulancesTableBody" class="divide-y divide-gray-100 dark:divide-white/5"></tbody>
                         </table>
                     </div>
                 </div>
@@ -182,43 +206,43 @@
     <div id="userModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
-                <h3 id="userModalTitle" class="font-black text-lg dark:text-white">Add New User</h3>
-                <button onclick="closeUserModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 id="userModalTitle" class="font-black text-lg dark:text-white" data-i18n="modalAddUserTitle">Add New User</h3>
+                <button type="button" onclick="closeDetailsModal('userModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="userForm" class="p-5 space-y-4">
+            <form id="userForm" class="p-5 space-y-4 text-left rtl:text-right">
                 <input type="hidden" id="userId">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">Full Name</label>
+                    <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblFullName">Full Name</label>
                     <input type="text" id="userName" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Email</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblEmail">Email</label>
                         <input type="email" id="userEmail" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Phone</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblPhone">Phone</label>
                         <input type="text" id="userPhone" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Password</label>
-                        <input type="text" id="userPassword" required placeholder="Min 6 chars" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblPassword">Password</label>
+                        <input type="text" id="userPassword" required data-i18n-placeholder="placeholderMinChars" placeholder="Min 6 chars" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Role</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblRole">Role</label>
                         <select id="userRole" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="user">Normal User</option>
-                            <option value="driver">Ambulance Driver</option>
-                            <option value="hospital">Hospital Admin</option>
-                            <option value="admin">Super Admin</option>
+                            <option value="user" data-i18n="roleUser">Normal User</option>
+                            <option value="driver" data-i18n="roleDriver">Ambulance Driver</option>
+                            <option value="hospital" data-i18n="roleHospital">Hospital Admin</option>
+                            <option value="admin" data-i18n="roleAdmin">Super Admin</option>
                         </select>
                     </div>
                 </div>
                 <div class="pt-4 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3">
-                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors">Cancel</button>
-                    <button type="submit" id="saveUserBtn" class="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors">Save User</button>
+                    <button type="button" onclick="closeDetailsModal('userModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors" data-i18n="btnCancel">Cancel</button>
+                    <button type="submit" id="saveUserBtn" class="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors" data-i18n="btnSaveUser">Save User</button>
                 </div>
             </form>
         </div>
@@ -227,114 +251,191 @@
     <div id="viewDetailsModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
-                <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-address-card text-blue-500 mr-2"></i> User Profile</h3>
-                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-address-card text-blue-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalViewUserTitle">User Profile</span></h3>
+                <button type="button" onclick="closeDetailsModal('viewDetailsModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="p-6 space-y-4 text-sm" id="viewDetailsContent">
-                </div>
+            <div class="p-6 space-y-4 text-sm text-left rtl:text-right" id="viewDetailsContent"></div>
             <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end">
-                <button onclick="closeDetailsModal()" class="px-6 py-2 text-sm font-bold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors">Close</button>
+                <button type="button" onclick="closeDetailsModal('viewDetailsModal')" class="px-6 py-2 text-sm font-bold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors" data-i18n="btnClose">Close</button>
             </div>
         </div>
     </div>
-    <div id="module-hospitals" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
-                
-                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-hospital text-blue-500 mr-2"></i> Hospitals Network</h2>
-                        <p class="text-xs text-gray-500">Manage facilities, locations, and real-time bed capacities.</p>
-                    </div>
-                    <button onclick="openHospitalModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Add Hospital
-                    </button>
-                </div>
-
-                <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                            <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
-                                <tr>
-                                    <th class="p-4 font-bold">ID</th>
-                                    <th class="p-4 font-bold">Hospital Name</th>
-                                    <th class="p-4 font-bold">Location</th>
-                                    <th class="p-4 font-bold text-center">Available Beds</th>
-                                    <th class="p-4 font-bold">Admin Account</th>
-                                    <th class="p-4 font-bold text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="hospitalsTableBody" class="divide-y divide-gray-100 dark:divide-white/5">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
 
     <div id="hospitalModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 flex-shrink-0">
-                <h3 id="hospitalModalTitle" class="font-black text-lg dark:text-white">Add New Hospital</h3>
-                <button type="button" onclick="closeHospitalModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h3 id="hospitalModalTitle" class="font-black text-lg dark:text-white" data-i18n="modalAddHospTitle">Add New Hospital</h3>
+                <button type="button" onclick="closeDetailsModal('hospitalModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            
             <div class="overflow-y-auto p-5">
-                <form id="hospitalForm" class="space-y-4">
+                <form id="hospitalForm" class="space-y-4 text-left rtl:text-right">
                     <input type="hidden" id="hospId">
-                    
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Hospital Name</label>
-                            <input type="text" id="hospName" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Governorate</label>
-                            <input type="text" id="hospGov" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">City / Region</label>
-                            <input type="text" id="hospCity" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Phone (Emergency)</label>
-                            <input type="text" id="hospPhone" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 text-blue-500">Available Beds Capacity</label>
-                            <input type="number" id="hospBeds" required min="0" value="10" class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 text-sm dark:text-white font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Link to Admin Account (Required)</label>
-                            <select id="hospUserId" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                                </select>
-                        </div>
+                        <div class="col-span-2"><label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblHospName">Hospital Name</label><input type="text" id="hospName" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblGov">Governorate</label><input type="text" id="hospGov" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblCity">City / Region</label><input type="text" id="hospCity" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblEmergPhone">Phone (Emergency)</label><input type="text" id="hospPhone" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 mb-1 text-blue-500" data-i18n="lblBeds">Available Beds Capacity</label><input type="number" id="hospBeds" required min="0" value="10" class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 text-sm dark:text-white font-bold outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div class="col-span-2"><label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblAdminAcc">Link to Admin Account</label><select id="hospUserId" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"></select></div>
                     </div>
-
                     <div class="mt-4 border-t border-gray-200 dark:border-white/10 pt-4">
-                        <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-solid fa-location-dot text-red-500 mr-1"></i> Pin Location on Map</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-solid fa-location-dot text-red-500 ltr:mr-1 rtl:ml-1"></i> <span data-i18n="lblPinLocation">Pin Location on Map</span></label>
                         <div id="hospitalPickerMap" class="w-full h-48 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-gray-200 shadow-inner z-0"></div>
-                        
                         <div class="flex gap-4 mt-2">
-                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
-                                <span class="text-[10px] text-gray-400 w-8">LAT</span>
-                                <input type="text" id="hospLat" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full">
-                            </div>
-                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
-                                <span class="text-[10px] text-gray-400 w-8">LNG</span>
-                                <input type="text" id="hospLng" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full">
-                            </div>
+                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2"><span class="text-[10px] text-gray-400 w-8">LAT</span><input type="text" id="hospLat" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full"></div>
+                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2"><span class="text-[10px] text-gray-400 w-8">LNG</span><input type="text" id="hospLng" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full"></div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="p-4 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-white/5 flex-shrink-0">
-                <button type="button" onclick="closeHospitalModal()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" form="hospitalForm" id="saveHospBtn" class="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors">Save Hospital</button>
+                <button type="button" onclick="closeDetailsModal('hospitalModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors" data-i18n="btnCancel">Cancel</button>
+                <button type="submit" form="hospitalForm" id="saveHospBtn" class="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors" data-i18n="btnSaveHosp">Save Hospital</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewHospitalDetailsModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-hospital text-blue-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalViewHospTitle">Hospital Details</span></h3>
+                <button type="button" onclick="closeDetailsModal('viewHospitalDetailsModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-left rtl:text-right" id="viewHospitalDetailsContent"></div>
+            <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end">
+                <button type="button" onclick="closeDetailsModal('viewHospitalDetailsModal')" class="px-6 py-2 text-sm font-bold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors" data-i18n="btnClose">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hospMapFilterModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+            <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20">
+                <h3 class="font-black text-lg text-blue-700 dark:text-blue-400"><i class="fa-solid fa-crosshairs ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalHospFilterTitle">Geographic Hospitals Filter</span></h3>
+                <button type="button" onclick="closeDetailsModal('hospMapFilterModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 text-left rtl:text-right">
+                <p class="text-xs text-gray-500 mb-3" data-i18n="lblFilterDescHosp">Click on the map to set a center point, then adjust the radius to find hospitals within that zone.</p>
+                <div id="hospFilterMapArea" class="w-full h-64 rounded-xl border-2 border-gray-300 dark:border-gray-600 z-0 mb-4"></div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1"><span data-i18n="lblSearchRadius">Search Radius:</span> <span id="hospRadiusDisplay" class="text-blue-500 text-sm ltr:ml-1 rtl:mr-1">5 km</span></label>
+                    <input type="range" id="hospMapRadiusSlider" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-blue-500">
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-between">
+                <button type="button" onclick="clearHospMapFilter()" class="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" data-i18n="btnClearFilter">Clear Filter</button>
+                <button type="button" onclick="applyHospMapFilter()" class="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors" data-i18n="btnApplyFilter">Apply Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ambulanceModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 flex-shrink-0">
+                <h3 id="ambulanceModalTitle" class="font-black text-lg dark:text-white" data-i18n="modalAddAmbTitle">Add New Ambulance Unit</h3>
+                <button type="button" onclick="closeDetailsModal('ambulanceModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="overflow-y-auto p-5">
+                <form id="ambulanceForm" class="space-y-4 text-left rtl:text-right">
+                    <input type="hidden" id="ambId">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblUnitCode">Unit Code / Plate</label>
+                            <input type="text" id="ambCode" required placeholder="e.g., UNIT-05" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white font-bold uppercase outline-none focus:ring-2 focus:ring-success">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblOperStatus">Operational Status</label>
+                            <select id="ambStatus" required class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-success cursor-pointer">
+                                <option value="available" data-i18n="statusAvail">Available (Ready)</option>
+                                <option value="offline" data-i18n="statusOffline">Offline (Maintenance)</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1" data-i18n="lblAssignDriver">Assign Driver</label>
+                            <select id="ambDriverId" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg p-2.5 text-sm dark:text-white outline-none focus:ring-2 focus:ring-success cursor-pointer"></select>
+                        </div>
+                    </div>
+                    <div class="mt-4 border-t border-gray-200 dark:border-white/10 pt-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-2"><i class="fa-solid fa-map-pin text-success ltr:mr-1 rtl:ml-1"></i> <span data-i18n="lblSetPatrolZone">Set Patrol Base Zone (Click Map)</span></label>
+                        <div id="ambulancePickerMap" class="w-full h-48 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-gray-200 shadow-inner z-0"></div>
+                        <div class="flex gap-4 mt-2">
+                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2"><span class="text-[10px] text-gray-400 w-8">LAT</span><input type="text" id="ambLat" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full"></div>
+                            <div class="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-2"><span class="text-[10px] text-gray-400 w-8">LNG</span><input type="text" id="ambLng" readonly class="bg-transparent text-xs font-mono dark:text-white outline-none w-full"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3 bg-gray-50 dark:bg-white/5 flex-shrink-0">
+                <button type="button" onclick="closeDetailsModal('ambulanceModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors" data-i18n="btnCancel">Cancel</button>
+                <button type="submit" form="ambulanceForm" id="saveAmbBtn" class="px-6 py-2 text-sm font-bold bg-success hover:bg-emerald-600 text-white rounded-lg shadow-md transition-colors" data-i18n="btnSaveAmb">Save Unit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewAmbulanceDetailsModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-truck-medical text-success ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalViewAmbTitle">Unit Details</span></h3>
+                <button type="button" onclick="closeDetailsModal('viewAmbulanceDetailsModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-left rtl:text-right" id="viewAmbulanceDetailsContent"></div>
+            <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end">
+                <button type="button" onclick="closeDetailsModal('viewAmbulanceDetailsModal')" class="px-6 py-2 text-sm font-bold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors" data-i18n="btnClose">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mapFilterModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+            <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-purple-50 dark:bg-purple-900/20">
+                <h3 class="font-black text-lg text-purple-700 dark:text-purple-400"><i class="fa-solid fa-crosshairs ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalAmbFilterTitle">Geographic Fleet Filter</span></h3>
+                <button type="button" onclick="closeDetailsModal('mapFilterModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 text-left rtl:text-right">
+                <p class="text-xs text-gray-500 mb-3" data-i18n="lblFilterDescAmb">Click on the map to set a center point, then adjust the radius to find ambulances within that zone.</p>
+                <div id="filterMapArea" class="w-full h-64 rounded-xl border-2 border-gray-300 dark:border-gray-600 z-0 mb-4"></div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1"><span data-i18n="lblSearchRadius">Search Radius:</span> <span id="radiusDisplay" class="text-purple-500 text-sm ltr:ml-1 rtl:mr-1">5 km</span></label>
+                    <input type="range" id="mapRadiusSlider" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-purple-500">
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-between">
+                <button type="button" onclick="clearMapFilter()" class="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" data-i18n="btnClearFilter">Clear Filter</button>
+                <button type="button" onclick="applyMapFilter()" class="px-6 py-2 text-sm font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-md transition-colors" data-i18n="btnApplyFilter">Apply Filter</button>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إغلاق وفتح العناصر (Accordion)
+        // 🚀 نظام الإشعارات المنبثقة (Toast System)
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-success' : 'bg-red-500';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-xmark';
+            toast.className = `flex items-center gap-3 ${bgColor} text-white px-5 py-3 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.2)] transform transition-all duration-500 translate-y-20 opacity-0 border border-white/20 z-[9999]`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i> <span class="font-bold tracking-wide">${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-20', 'opacity-0'); }, 10);
+            setTimeout(() => { 
+                toast.classList.add('opacity-0'); 
+                toast.classList.add(document.documentElement.dir === 'rtl' ? '-translate-x-10' : 'translate-x-10');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        };
+
+        // إغلاق النوافذ المنبثقة
+        window.closeDetailsModal = function(modalId) {
+            const m = document.getElementById(modalId);
+            if(m) {
+                m.classList.add('opacity-0');
+                m.children[0].classList.add('scale-95');
+                setTimeout(() => { m.classList.add('hidden'); }, 300);
+            }
+        };
+
         function toggleSection(bodyId, iconId) {
             const body = document.getElementById(bodyId);
             const icon = document.getElementById(iconId);
@@ -347,7 +448,6 @@
             }
         }
 
-        // إغلاق وفتح القائمة اليسرى (Sidebar)
         let isLeftOpen = true;
         function toggleLeftSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -364,7 +464,6 @@
             setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
         }
 
-        // إغلاق وفتح القائمة اليمنى لتوسيع الخريطة
         let isRightOpen = true;
         function toggleRightSidebar() {
             const sidebar = document.getElementById('rightSidebar');
@@ -373,20 +472,33 @@
             if(isRightOpen) {
                 sidebar.classList.remove('w-0', 'opacity-0', 'pointer-events-none');
                 sidebar.classList.add('w-96', 'opacity-100');
-                btnText.innerText = "Maximize Map";
+                btnText.innerText = document.documentElement.dir === 'ar' ? "تكبير الخريطة" : "Maximize Map";
             } else {
                 sidebar.classList.remove('w-96', 'opacity-100');
                 sidebar.classList.add('w-0', 'opacity-0', 'pointer-events-none');
-                btnText.innerText = "Show Panels";
+                btnText.innerText = document.documentElement.dir === 'ar' ? "إظهار القوائم" : "Show Panels";
             }
             setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500); 
         }
+
+        // الاستماع لتغيير اللغة وتحديث النصوص المبرمجة محلياً (Inline Texts)
+        window.addEventListener('languageChanged', (e) => {
+            const btnText = document.getElementById('toggleMapBtnText');
+            if (btnText) {
+                if (isRightOpen) {
+                    btnText.innerText = e.detail.lang === 'ar' ? "تكبير الخريطة" : "Maximize Map";
+                } else {
+                    btnText.innerText = e.detail.lang === 'ar' ? "إظهار القوائم" : "Show Panels";
+                }
+            }
+        });
     </script>
 
     <script type="module" src="../js/core/language.js"></script>
     <script type="module" src="../js/core/theme.js"></script>
     <script type="module" src="../js/admin/users.js"></script>
-    <script type="module" src="../js/admin/main.js"></script>
     <script type="module" src="../js/admin/hospitals.js"></script>
+    <script type="module" src="../js/admin/ambulances.js"></script>
+    <script type="module" src="../js/admin/main.js"></script>
 </body>
 </html>
