@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Navigation Logic (SPA Routing)
     // =========================================================================
     const navLinks = document.querySelectorAll('#sidebarNav a');
-    const availableModules = ['dashboard', 'users', 'hospitals', 'ambulances', 'devices', 'logs']; 
+    const availableModules = ['dashboard', 'users', 'hospitals', 'ambulances', 'devices','incidents', 'logs','applications']; 
 
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -109,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (mod === 'hospitals' && window.loadHospitalsData) window.loadHospitalsData();
                         if (mod === 'ambulances' && window.loadAmbulancesData) window.loadAmbulancesData();
                         if (mod === 'devices' && window.loadDevicesData) window.loadDevicesData();
+                        if (mod === 'applications' && window.loadApplicationsData) window.loadApplicationsData();
+                        if (mod === 'incidents' && window.loadIncidentsData) window.loadIncidentsData();
                         if (mod === 'logs' && window.loadLogsData) window.loadLogsData();
                         
                     } else {

@@ -32,8 +32,13 @@
     <aside id="sidebar" class="w-64 bg-white dark:bg-gray-900 border-r rtl:border-l rtl:border-r-0 border-gray-200 dark:border-white/10 flex flex-col transition-all duration-300 z-50">
         <div class="h-16 flex items-center px-6 gap-3 border-b border-gray-200 dark:border-white/10 justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0"><i class="fa-solid fa-truck-medical"></i></div>
-                <span id="logoText" class="text-xl font-black tracking-tight dark:text-white whitespace-nowrap transition-opacity duration-300" data-i18n="adminTitle">ResQ Admin</span>
+        <a href="../index.html" class="flex items-center group">
+            <img src="../assets/images/logoL.png" alt="EnQaZ Logo" 
+                 class="h-12 sm:h-12  w-auto border-2 border-gray-400 rounded-lg object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105 drop-shadow-md">
+            
+            <img src="../assets/images/logoD.png" alt="EnQaZ Logo" 
+                 class="h-12 sm:h-12  w-auto border-2 border-gray-500 rounded-lg object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105 drop-shadow-md">
+        </a>
             </div>
             <button onclick="toggleLeftSidebar()" class="text-gray-500 hover:text-primary transition-colors"><i class="fa-solid fa-bars"></i></button>
         </div>
@@ -42,8 +47,9 @@
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="users"><i class="fa-solid fa-users w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navUsers">Users</span></a>
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="hospitals"><i class="fa-solid fa-hospital w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navHospitals">Hospitals</span></a>
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="ambulances"><i class="fa-solid fa-truck-medical w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navAmbulances">Ambulances</span></a>
-            
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="devices"><i class="fa-solid fa-microchip w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navDevices">Devices</span></a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="applications"><i class="fa-solid fa-file-signature w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navApps">Applications</span></a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="incidents"><i class="fa-solid fa-file-medical-alt w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navIncidents">Incidents Log</span></a>
         <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg font-bold transition-colors" data-module="logs"><i class="fa-solid fa-clipboard-list w-5 text-center"></i> <span class="nav-text whitespace-nowrap transition-opacity duration-300" data-i18n="navLogs">System Logs</span></a>
         </nav>
     </aside>
@@ -325,10 +331,149 @@
                     </div>
                 </div>
             </div>
-        
+        <div id="module-incidents" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex flex-col lg:flex-row justify-between items-center gap-4">
+                    <div class="flex-shrink-0">
+                        <h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-triangle-exclamation text-primary ltr:mr-2 rtl:ml-2"></i> <span data-i18n="incRecordsTitle">Incidents Log</span></h2>
+                        <p class="text-xs text-gray-500" data-i18n="incRecordsDesc">Review historic incidents and response data.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                        <button onclick="openIncMapFilterModal()" id="incMapFilterBtnActive" class="bg-primary/20 text-primary border border-primary/50 hover:bg-primary hover:text-white font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"><i class="fa-solid fa-map-location-dot"></i> <span data-i18n="mapFilter">Map Filter</span></button>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="incSearchInput" data-i18n-placeholder="searchInc" placeholder="Search ID, Device..." class="ltr:pl-9 rtl:pr-9 ltr:pr-4 rtl:pl-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-primary w-full md:w-56 transition-all">
+                        </div>
+                        <select id="incStatusFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+                            <option value="" data-i18n="allStatus">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="canceled">Canceled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left rtl:text-right text-sm text-gray-600 dark:text-gray-300">
+                            <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-4 font-bold" data-i18n="colId">ID</th>
+                                    <th class="p-4 font-bold" data-i18n="lblIncidentTime">Date/Time</th>
+                                    <th class="p-4 font-bold" data-i18n="colDeviceUid">Device</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colGForce">Impact</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colStatus">Status</th>
+                                    <th class="p-4 font-bold text-center" data-i18n="colActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incidentsTableBody" class="divide-y divide-gray-100 dark:divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+<div id="module-applications" class="hidden h-full flex flex-col gap-4 animate-fade-in w-full">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div class="flex-shrink-0">
+            <h2 class="text-xl font-black text-secondary dark:text-white"><i class="fa-solid fa-file-signature text-orange-500 ltr:mr-2 rtl:ml-2"></i> <span data-i18n="navApps">Device Applications</span></h2>
+            <p class="text-xs text-gray-500">Review, approve, and manage user hardware applications.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="appSearchInput" placeholder="Search Name, Phone, Email..." class="ltr:pl-9 rtl:pr-9 ltr:pr-4 rtl:pl-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-orange-500 w-full md:w-56 transition-all">
+            </div>
+            <select id="appStatusFilter" class="bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-2 text-sm text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer font-bold">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="suspended">Suspended</option>
+            </select>
+        </div>
+        <button onclick="loadApplicationsData()" class="w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-orange-500 hover:text-white text-gray-500 rounded-xl transition-colors shadow-sm" title="تحديث البيانات">
+    <i class="fa-solid fa-rotate-right"></i>
+</button>
+    </div>
+    <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+        <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left rtl:text-right text-sm text-gray-600 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="p-4 font-bold">ID</th>
+                        <th class="p-4 font-bold">Applicant</th>
+                        <th class="p-4 font-bold">Car Info</th>
+                        <th class="p-4 font-bold text-center">Date</th>
+                        <th class="p-4 font-bold text-center">Status</th>
+                        <th class="p-4 font-bold text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsTableBody" class="divide-y divide-gray-100 dark:divide-white/5"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="viewAppModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 flex-shrink-0">
+            <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-file-contract text-orange-500 ltr:mr-2 rtl:ml-2"></i> Application Details</h3>
+            <button type="button" onclick="closeDetailsModal('viewAppModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto text-sm text-left rtl:text-right" id="viewAppContent"></div>
+        <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end gap-2 flex-shrink-0" id="viewAppActions">
+            </div>
+    </div>
+</div>
+
+<div id="customInputModal" class="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="p-6 text-center">
+            <h3 class="text-xl font-black text-gray-800 dark:text-white mb-2" id="inputModalTitle">Provide Reason</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="inputModalDesc">This reason will be recorded.</p>
+            <textarea id="customInputTextarea" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 mb-6" rows="3" placeholder="Enter details here..."></textarea>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeInputModal()" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white font-bold rounded-xl transition-colors hover:bg-gray-300 dark:hover:bg-gray-700">Cancel</button>
+                <button id="confirmInputBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
         </main>
     </div>
+            <div id="viewIncDetailsModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+                <div class="bg-white dark:bg-gray-900 w-full max-w-xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                        <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-file-medical text-primary ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalViewIncTitle">Incident Details</span></h3>
+                        <button type="button" onclick="closeDetailsModal('viewIncDetailsModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                    <div class="p-6 space-y-4 text-sm text-left rtl:text-right" id="viewIncDetailsContent"></div>
+                    <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end">
+                        <button type="button" onclick="closeDetailsModal('viewIncDetailsModal')" class="px-6 py-2 text-sm font-bold bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg transition-colors" data-i18n="btnClose">Close</button>
+                    </div>
+                </div>
+            </div>
 
+            <div id="incMapFilterModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+                <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+                    <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-red-50 dark:bg-red-900/20">
+                        <h3 class="font-black text-lg text-red-700 dark:text-red-400"><i class="fa-solid fa-crosshairs ltr:mr-2 rtl:ml-2"></i> <span data-i18n="modalIncFilterTitle">Geographic Search</span></h3>
+                        <button type="button" onclick="closeDetailsModal('incMapFilterModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                    <div class="p-4 text-left rtl:text-right">
+                        <p class="text-xs text-gray-500 mb-3" data-i18n="lblFilterDescInc">Click on the map to find incidents in a specific area.</p>
+                        <div id="incFilterMapArea" class="w-full h-64 rounded-xl border-2 border-gray-300 dark:border-gray-600 z-0 mb-4"></div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1"><span data-i18n="lblSearchRadius">Search Radius:</span> <span id="incRadiusDisplay" class="text-primary text-sm ltr:ml-1 rtl:mr-1">5 km</span></label>
+                            <input type="range" id="incMapRadiusSlider" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-red-500">
+                        </div>
+                    </div>
+                    <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-between">
+                        <button type="button" onclick="clearIncMapFilter()" class="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" data-i18n="btnClearFilter">Clear Filter</button>
+                        <button type="button" onclick="applyIncMapFilter()" class="px-6 py-2 text-sm font-bold bg-primary hover:bg-red-700 text-white rounded-lg shadow-md transition-colors" data-i18n="btnApplyFilter">Apply Filter</button>
+                    </div>
+                </div>
+            </div>
     <div id="userModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
@@ -374,6 +519,31 @@
         </div>
     </div>
 
+<div id="viewAppModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5 flex-shrink-0">
+            <h3 class="font-black text-lg dark:text-white"><i class="fa-solid fa-file-contract text-orange-500 ltr:mr-2 rtl:ml-2"></i> Application Details</h3>
+            <button type="button" onclick="closeDetailsModal('viewAppModal')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto text-sm text-left rtl:text-right" id="viewAppContent"></div>
+        <div class="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-end gap-2 flex-shrink-0" id="viewAppActions">
+            </div>
+    </div>
+</div>
+
+<div id="customInputModal" class="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="p-6 text-center">
+            <h3 class="text-xl font-black text-gray-800 dark:text-white mb-2" id="inputModalTitle">Provide Reason</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="inputModalDesc">This reason will be recorded.</p>
+            <textarea id="customInputTextarea" class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl p-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 mb-6" rows="3" placeholder="Enter details here..."></textarea>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeInputModal()" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white font-bold rounded-xl transition-colors hover:bg-gray-300 dark:hover:bg-gray-700">Cancel</button>
+                <button id="confirmInputBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="viewDetailsModal" class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="p-4 border-b border-gray-200 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
@@ -609,11 +779,12 @@
                     </div>
                 </div>
             </div>
-            <div id="customConfirmModal" class="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+
+   <div id="customConfirmModal" class="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mx-auto flex items-center justify-center mb-4">
-                    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-600 dark:text-red-500 animate-pulse"></i>
+                <div id="confirmIconDiv" class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mx-auto flex items-center justify-center mb-4">
+                    <i id="confirmIconContainer" class="fa-solid fa-triangle-exclamation text-3xl text-red-600 dark:text-red-500 animate-pulse"></i>
                 </div>
                 <h3 class="text-xl font-black text-gray-800 dark:text-white mb-2" id="confirmTitle" data-i18n="confirmTitle">Are you sure?</h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="confirmMessage" data-i18n="confirmMessage">This action cannot be undone.</p>
@@ -624,20 +795,49 @@
             </div>
         </div>
     </div>
+   
+        </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // نظام نافذة التأكيد المخصصة (بديل confirm المتصفح)
-        window.openConfirmModal = function(title, message, onConfirm) {
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMessage').innerText = message;
-            const btn = document.getElementById('confirmActionBtn');
-            btn.onclick = () => { closeConfirmModal(); onConfirm(); };
-            
-            const m = document.getElementById('customConfirmModal');
-            m.classList.remove('hidden');
-            setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
-        };
-        
+// نظام نافذة التأكيد المخصصة (ديناميكي يدعم الحذف والقبول)
+window.openConfirmModal = function(title, message, onConfirm, type = 'danger', customBtnText = null) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmMessage').innerText = message;
+    
+    const btn = document.getElementById('confirmActionBtn');
+    const iconContainer = document.getElementById('confirmIconContainer');
+    const iconDiv = document.getElementById('confirmIconDiv');
+
+    // تحديد لغة الواجهة الحالية
+    const isAr = document.documentElement.dir === 'rtl';
+
+    if (type === 'success') {
+        // شكل القبول (أخضر)
+        iconDiv.className = "w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mx-auto flex items-center justify-center mb-4";
+        iconContainer.className = "fa-solid fa-check-circle text-3xl text-green-600 dark:text-green-500";
+        btn.className = "px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2";
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>${customBtnText || (isAr ? 'تأكيد' : 'Confirm')}</span>`;
+    } else {
+        // شكل الحذف/الخطر (أحمر)
+        iconDiv.className = "w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mx-auto flex items-center justify-center mb-4";
+        iconContainer.className = "fa-solid fa-triangle-exclamation text-3xl text-red-600 dark:text-red-500 animate-pulse";
+        btn.className = "px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2";
+        btn.innerHTML = `<i class="fa-solid fa-trash"></i> <span>${customBtnText || (isAr ? 'حذف' : 'Delete')}</span>`;
+    }
+
+    btn.onclick = () => { closeConfirmModal(); onConfirm(); };
+    
+    const m = document.getElementById('customConfirmModal');
+    m.classList.remove('hidden');
+    setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
+};
+
+window.closeConfirmModal = function() {
+    const m = document.getElementById('customConfirmModal');
+    m.classList.add('opacity-0'); m.children[0].classList.add('scale-95');
+    setTimeout(() => { m.classList.add('hidden'); }, 300);
+};  
         window.closeConfirmModal = function() {
             const m = document.getElementById('customConfirmModal');
             m.classList.add('opacity-0'); m.children[0].classList.add('scale-95');
@@ -684,22 +884,33 @@
             }
         }
 
-        let isLeftOpen = true;
-        function toggleLeftSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const texts = document.querySelectorAll('.nav-text');
-            const logo = document.getElementById('logoText');
-            isLeftOpen = !isLeftOpen;
-            if(isLeftOpen) {
-                sidebar.classList.remove('w-20'); sidebar.classList.add('w-64');
-                setTimeout(() => { texts.forEach(t => t.classList.remove('hidden')); logo.classList.remove('hidden'); }, 150);
-            } else {
-                texts.forEach(t => t.classList.add('hidden')); logo.classList.add('hidden');
-                sidebar.classList.remove('w-64'); sidebar.classList.add('w-20');
-            }
-            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
-        }
-
+let isLeftOpen = true;
+function toggleLeftSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const texts = document.querySelectorAll('.nav-text');
+    const logo = document.getElementById('logoText'); // This is null, which is fine now
+    
+    isLeftOpen = !isLeftOpen;
+    
+    if(isLeftOpen) {
+        sidebar.classList.remove('w-20'); 
+        sidebar.classList.add('w-64');
+        setTimeout(() => { 
+            texts.forEach(t => t.classList.remove('hidden')); 
+            // Safety check added here
+            if (logo) logo.classList.remove('hidden'); 
+        }, 150);
+    } else {
+        texts.forEach(t => t.classList.add('hidden')); 
+        // Safety check added here
+        if (logo) logo.classList.add('hidden');
+        
+        sidebar.classList.remove('w-64'); 
+        sidebar.classList.add('w-20');
+    }
+    
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
+}
         let isRightOpen = true;
         function toggleRightSidebar() {
             const sidebar = document.getElementById('rightSidebar');
@@ -729,7 +940,13 @@
             }
         });
     </script>
-
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+    (function() {
+ 
+        emailjs.init("YKJgvPCGxkJif7-o3"); 
+    })();
+</script>
     <script type="module" src="../js/core/language.js"></script>
     <script type="module" src="../js/core/theme.js"></script>
     <script type="module" src="../js/admin/users.js"></script>
@@ -737,6 +954,8 @@
     <script type="module" src="../js/admin/ambulances.js"></script>
     <script type="module" src="../js/admin/devices.js"></script>
     <script type="module" src="../js/admin/logs.js"></script>
+    <script type="module" src="../js/admin/incidents.js"></script>
+    <script type="module" src="../js/admin/applications.js"></script>
     <script type="module" src="../js/admin/main.js"></script>
 </body>
 </html>

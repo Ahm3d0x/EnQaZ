@@ -221,7 +221,21 @@ function openPanel(type, data) {
             <div class="flex justify-between border-b dark:border-white/10 pb-2"><span>${t('status')}</span><span class="text-primary font-bold uppercase">${data.status}</span></div>
             <div class="flex justify-between border-b dark:border-white/10 pb-2"><span>${t('gForce') || 'G-Force'}</span><span class="font-mono text-red-500">${data.g_force} G</span></div>
             <div class="flex justify-between text-xs text-gray-400 mt-2"><span>${data.devices?.car_model || ''}</span><span>${data.devices?.device_uid}</span></div>`;
-    } else if (type === 'Ambulance') {
+  
+  const canCancel = data.status === 'pending' || data.status === 'confirmed' || data.status === 'assigned';
+        
+        document.getElementById('panelContent').innerHTML = `
+            <div class="flex justify-between border-b dark:border-white/10 pb-2"><span>${t('status') || 'Status'}</span><span class="text-primary font-bold uppercase">${data.status}</span></div>
+            <div class="flex justify-between border-b dark:border-white/10 pb-2"><span>${t('gForce') || 'G-Force'}</span><span class="font-mono text-red-500">${data.g_force || 'N/A'} G</span></div>
+            <div class="flex justify-between text-xs text-gray-400 mt-2"><span>${data.devices?.car_model || ''}</span><span>${data.devices?.device_uid || ''}</span></div>
+            
+            ${canCancel ? `
+            <button onclick="cancelIncident(${data.id})" class="mt-4 w-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 py-2.5 rounded-xl transition-colors font-bold flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-ban"></i> إلغاء البلاغ (False Alarm)
+            </button>
+            ` : ''}
+        `;
+        } else if (type === 'Ambulance') {
         document.getElementById('panelContent').innerHTML = `
             <div class="flex justify-between border-b dark:border-white/10 pb-2"><span>${t('unitCode')}</span><span class="font-bold text-gray-800 dark:text-white uppercase">${data.code}</span></div>
             <div class="flex justify-between"><span>${t('status')}</span><span class="uppercase font-bold ${data.status==='available'?'text-success':'text-red-500'}">${data.status.replace('_', ' ')}</span></div>`;
@@ -245,11 +259,27 @@ function renderIncidents() {
     const incidents = Object.values(rawData.incidents).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const badge = document.getElementById('pendingCountBadge'); if(badge) badge.innerText = incidents.filter(i=>i.status==='pending').length;
     
-    list.innerHTML = incidents.map(inc => {
+list.innerHTML = incidents.map(inc => {
         let isQueued = (inc.status === 'confirmed' && !inc.assigned_ambulance_id);
         let sColor = inc.status === 'pending' ? 'text-warning' : isQueued ? 'text-primary' : 'text-success';
+        
+        // 🌟 حساب الوقت المتبقي للعداد (10 ثواني من وقت الإنشاء) 🌟
+        let countdownHtml = '';
+        if (inc.status === 'pending') {
+            countdownHtml = `
+            <div class="mt-2">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[9px] text-red-500 font-bold animate-pulse">Auto-dispatch in:</span>
+                    <span class="text-[10px] font-mono font-black text-red-500 incident-timer" data-created="${inc.created_at}">10s</span>
+                </div>
+                <div class="h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-red-500 incident-progress" data-created="${inc.created_at}" style="width: 100%; transition: width 1s linear;"></div>
+                </div>
+            </div>`;
+        }
+
         return `
-        <div class="bg-gray-50 dark:bg-white/5 border border-transparent dark:border-white/10 rounded-lg p-2 mb-2 transition-colors hover:border-gray-300 dark:hover:border-gray-500">
+        <div class="bg-gray-50 dark:bg-white/5 border border-transparent dark:border-white/10 rounded-lg p-3 mb-2 transition-colors hover:border-gray-300 dark:hover:border-gray-500">
             <div class="flex justify-between items-center cursor-pointer" onclick="focusMapEntity('Incident', ${inc.id})">
                 <span class="text-xs font-mono font-bold text-gray-500 dark:text-gray-400">#INC-${inc.id}</span>
                 <div class="flex items-center gap-2">
@@ -257,7 +287,7 @@ function renderIncidents() {
                     ${inc.assigned_ambulance_id ? `<i class="fa-solid fa-eye text-gray-400 hover:text-white" onclick="toggleRoute(${inc.id}, event)"></i>` : ''}
                 </div>
             </div>
-            ${inc.status === 'pending' ? `<div class="h-0.5 bg-gray-200 dark:bg-gray-800 mt-1"><div class="h-full bg-warning transition-all duration-[10000ms] w-full" style="width:0%"></div></div>` : ''}
+            ${countdownHtml}
         </div>`;
     }).join('');
 }
@@ -292,3 +322,76 @@ function renderDevices(devicesList) {
             <div class="text-[10px] text-gray-400 mt-1">${d.device_uid}</div>
         </div>`).join('');
 }
+
+
+// 🌟 دالة إلغاء البلاغ الكاذب أو الخاطئ 🌟
+window.cancelIncident = async function(incId) {
+    // استخدام النافذة المخصصة إذا كانت متوفرة، أو التأكيد العادي
+    const confirmMsg = document.documentElement.dir === 'rtl' 
+        ? "هل أنت متأكد من إلغاء هذا البلاغ واعتباره بلاغاً كاذباً؟" 
+        : "Are you sure you want to cancel this incident (False Alarm)?";
+
+    if (window.openConfirmModal) {
+        window.openConfirmModal("إلغاء البلاغ", confirmMsg, () => executeCancel(incId));
+    } else if (confirm(confirmMsg)) {
+        executeCancel(incId);
+    }
+};
+
+async function executeCancel(incId) {
+    try {
+        // 1. تحديث الحالة في قاعدة البيانات إلى 'canceled'
+        await supabase.from(DB_TABLES.INCIDENTS).update({ status: 'canceled' }).eq('id', incId);
+
+        // 2. إغلاق اللوحة الجانبية للتفاصيل
+        const panel = document.getElementById('detailsPanel');
+        if(panel) panel.classList.add(document.documentElement.dir === 'rtl' ? '-translate-x-[120%]' : 'translate-x-[120%]');
+
+        // 3. إزالة الحادث (والمسار إن وجد) من الخريطة فوراً
+        if (MapEngine && MapEngine.markers && MapEngine.markers.incidents[incId]) {
+            MapEngine.map.removeLayer(MapEngine.markers.incidents[incId]);
+            delete MapEngine.markers.incidents[incId];
+        }
+        if (MapEngine && MapEngine.routes && MapEngine.routes[incId]) {
+            MapEngine.map.removeLayer(MapEngine.routes[incId]);
+            delete MapEngine.routes[incId];
+        }
+
+        if(window.showToast) window.showToast("تم إلغاء البلاغ بنجاح", "success");
+        
+        // 4. إعادة تحميل البيانات لتحديث القوائم
+        if (typeof loadEntities === 'function') await loadEntities();
+    } catch(e) {
+        console.error(e);
+        if(window.showToast) window.showToast("حدث خطأ أثناء الإلغاء", "error");
+    }
+}
+
+// 🌟 محرك العداد التنازلي الحي 🌟
+setInterval(() => {
+    const timers = document.querySelectorAll('.incident-timer');
+    const progresses = document.querySelectorAll('.incident-progress');
+    const now = new Date().getTime();
+
+    // تحديث النصوص (10s -> 0s)
+    timers.forEach(timer => {
+        const createdAt = new Date(timer.getAttribute('data-created')).getTime();
+        // نفترض أن التأخير 10 ثواني بالضبط (10000 ملي ثانية)
+        let timeLeft = 10 - Math.floor((now - createdAt) / 1000); 
+        
+        if (timeLeft < 0) timeLeft = 0;
+        timer.innerText = timeLeft + 's';
+        
+        // عندما يصل لـ 0 يمكنك تغيير النص للتوضيح
+        if (timeLeft === 0) timer.innerText = 'Dispatching...';
+    });
+
+    // تحديث شريط التقدم (100% -> 0%)
+    progresses.forEach(bar => {
+        const createdAt = new Date(bar.getAttribute('data-created')).getTime();
+        let percentage = 100 - (((now - createdAt) / 10000) * 100);
+        
+        if (percentage < 0) percentage = 0;
+        bar.style.width = percentage + '%';
+    });
+}, 1000);

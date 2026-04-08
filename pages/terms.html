@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="transition-colors duration-500">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnQaZ | شروط الاستخدام - Terms of Use</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { 
+            darkMode: 'class', 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] }, 
+                    colors: { primary: '#dc2626', secondary: '#0f172a', success: '#10b981' } 
+                } 
+            } 
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-[#020408] text-secondary dark:text-gray-200 min-h-screen font-sans flex flex-col transition-colors duration-500">
+
+    <nav class="w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 p-4 flex justify-between items-center sticky top-0 z-50">
+
+        <a href="../index.html" class="flex items-center group">
+            <img src="../assets/images/logoL.png" alt="EnQaZ Logo" 
+                 class="h-16 sm:h-18  w-auto border-2 border-gray-400 rounded-lg object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105 drop-shadow-md">
+            
+            <img src="../assets/images/logoD.png" alt="EnQaZ Logo" 
+                 class="h-16 sm:h-18  w-auto border-2 border-gray-500 rounded-lg object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105 drop-shadow-md">
+        </a>
+
+        
+
+        <div class="flex items-center gap-4">
+            <button id="themeToggleBtn" class="text-xl hover:scale-110 transition-transform" aria-label="تبديل المظهر"><span id="themeIcon">🌙</span></button>
+            <button id="langToggleBtn" class="font-bold text-sm px-3 py-1.5 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white rounded-lg transition-colors cursor-pointer" aria-label="تبديل اللغة">EN</button>
+            <a href="apply.html" class="hidden md:block text-sm font-bold text-gray-500 hover:text-primary transition" id="navReturnLink" aria-label="العودة للتقديم">العودة للتقديم</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 container mx-auto max-w-4xl p-4 md:p-8 py-10">
+        
+        <div id="content-ar" dir="rtl" class="text-right transition-opacity duration-300">
+            <header class="text-center mb-12">
+                <h1 class="text-3xl md:text-4xl font-black mb-3 text-gray-900 dark:text-white">شروط استخدام نظام إنقاذ (EnQaZ)</h1>
+                <p class="text-gray-500 dark:text-gray-400 font-bold text-lg">اتفاقية استخدام جهاز ونظام إنقاذ الذكي</p>
+            </header>
+
+            <div class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl border border-gray-200 dark:border-white/10 p-6 md:p-12">
+                
+                <section class="mb-10">
+                    <h2 class="text-2xl font-black text-primary mb-4 border-b-2 border-gray-100 dark:border-gray-800 pb-2">مقدمة</h2>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed font-semibold text-lg">مرحبًا بك في نظام إنقاذ (EnQaZ) للإنقاذ الذكي. يرجى قراءة شروط الاستخدام التالية بعناية قبل التقديم للحصول على الجهاز أو استخدام خدمات النظام. باستخدامك لنظام إنقاذ أو تقديمك لطلب الحصول على الجهاز، فإنك توافق على الالتزام بجميع الشروط والأحكام الواردة في هذه الصفحة.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">1. تعريف النظام</h2>
+                    <p class="text-gray-600 dark:text-gray-300 mb-3 font-bold">نظام إنقاذ (EnQaZ) هو منصة إنقاذ ذكية تعتمد على:</p>
+                    <ul class="space-y-2 mb-6 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>جهاز يتم تركيبه داخل المركبة</li>
+                        <li>نظام تحليل واكتشاف الحوادث</li>
+                        <li>إرسال تنبيهات الطوارئ تلقائيًا</li>
+                        <li>تحديد أقرب سيارة إسعاف وتوجيه الحالة إلى أقرب مستشفى</li>
+                    </ul>
+                    <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-5 rounded-2xl border-r-4 border-r-red-500">
+                        <h3 class="font-black text-red-700 dark:text-red-400 mb-3"><i class="fa-solid fa-triangle-exclamation ml-2"></i> عند وقوع حادث أو استشعار خطر:</h3>
+                        <ul class="space-y-2 text-red-600 dark:text-red-300 font-bold list-disc list-inside px-2">
+                            <li>يتم إرسال تنبيه تلقائي للنظام</li>
+                            <li>يتم إعطاء المستخدم مهلة 10 ثواني لإلغاء البلاغ</li>
+                            <li>في حالة عدم الإلغاء يتم تأكيد الحادث تلقائيًا</li>
+                            <li>يتم إرسال أقرب سيارة إسعاف للحالة وإخطار المستشفى الأقرب</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">2. شروط التقديم للحصول على الجهاز</h2>
+                    <ul class="space-y-2 mb-6 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>إدخال بيانات صحيحة وكاملة (بيانات شخصية، رقم الهاتف، بيانات المركبة)</li>
+                        <li>الموافقة على شروط الاستخدام</li>
+                        <li>الموافقة على تتبع الموقع أثناء الطوارئ</li>
+                    </ul>
+                    <p class="text-orange-600 dark:text-orange-400 font-bold mb-2">يحق لنظام إنقاذ رفض الطلب في الحالات التالية:</p>
+                    <p class="text-gray-600 dark:text-gray-400 font-semibold">بيانات غير صحيحة، بيانات غير مكتملة، استخدام غير قانوني للجهاز، أو الاشتباه في إساءة استخدام النظام.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">3. مسؤولية المستخدم</h2>
+                    <ul class="space-y-2 mb-4 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>يقر المستخدم بصحة جميع البيانات المدخلة.</li>
+                        <li>استخدام الجهاز لأغراض الطوارئ فقط وعدم العبث به أو تعطيله.</li>
+                        <li>عدم استخدام النظام في البلاغات الكاذبة.</li>
+                    </ul>
+                    <p class="text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg inline-block">يتحمل المستخدم المسؤولية الكاملة عن البلاغات الكاذبة المتكررة وتعطيل الجهاز عمدًا.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">4. آلية عمل البلاغات</h2>
+                    <div class="space-y-4">
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl items-center border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-xl flex-shrink-0">1</div>
+                            <p class="font-bold text-gray-700 dark:text-gray-200">يرسل الجهاز تنبيه أولي للنظام ويبدأ عداد 10 ثواني لإلغاء البلاغ.</p>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-secondary dark:bg-white text-white dark:text-secondary flex items-center justify-center font-black text-xl flex-shrink-0">2</div>
+                            <div>
+                                <p class="font-black text-gray-800 dark:text-white mb-1">في حالة عدم الإلغاء:</p>
+                                <p class="font-semibold text-gray-600 dark:text-gray-400">يتم تأكيد الحادث، تحديد أقرب سيارة إسعاف، توجيه الحالة إلى أقرب مستشفى، وبدء عملية الإنقاذ.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl items-center border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-gray-400 text-white flex items-center justify-center font-black text-xl flex-shrink-0">3</div>
+                            <p class="font-bold text-gray-700 dark:text-gray-200">في حالة إلغاء البلاغ خلال 10 ثواني: يتم إلغاء الحادث وتسجيل العملية في النظام.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-10">
+                    <section>
+                        <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">5. الموقع الجغرافي</h2>
+                        <p class="text-gray-600 dark:text-gray-300 font-semibold mb-2">بالموافقة على الشروط توافق على تتبع موقع المركبة أثناء الطوارئ لتوجيه الإسعاف.</p>
+                        <p class="text-success font-bold text-sm bg-success/10 p-2 rounded">لن يتم استخدام الموقع إلا في الحوادث والطوارئ وطلب المساعدة.</p>
+                    </section>
+                    <section>
+                        <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">6. الخصوصية وحماية البيانات</h2>
+                        <p class="text-gray-600 dark:text-gray-300 font-semibold mb-2">يقوم النظام بتخزين (الاسم، الهاتف، بيانات المركبة، وسجل الحوادث) لتحسين أداء النظام.</p>
+                        <p class="text-blue-600 dark:text-blue-400 font-bold text-sm">لن يتم مشاركة بياناتك مع أي جهة خارجية إلا خدمات الإسعاف، المستشفيات، والجهات الرسمية.</p>
+                    </section>
+                </div>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">7. البلاغات الكاذبة ومسؤولية النظام</h2>
+                    <ul class="space-y-3 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>في حالة تكرار البلاغات الكاذبة، يحتفظ نظام إنقاذ بحق إيقاف الحساب، تعطيل الجهاز، أو إلغاء الخدمة.</li>
+                        <li>نظام إنقاذ هو نظام دعم طوارئ ذكي، لكنه <strong>لا يضمن</strong> سرعة وصول الإسعاف في جميع الحالات لاعتماده على عوامل خارجية (توفر الإسعاف، دقة GPS، شبكة الاتصال).</li>
+                        <li>نظام إنقاذ غير مسؤول عن تأخير وصول الإسعاف أو أعطال الجهاز الناتجة عن سوء الاستخدام.</li>
+                    </ul>
+                </section>
+                
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">8. التحديثات وإلغاء الخدمة</h2>
+                    <p class="text-gray-600 dark:text-gray-300 font-semibold">يحتفظ نظام إنقاذ بحق تعديل شروط الاستخدام وتحديث السياسات، وسيتم إشعار المستخدم عند أي تحديث. يمكن إلغاء الخدمة بطلب من المستخدم، أو لمخالفة شروط الاستخدام.</p>
+                </section>
+
+                <section class="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">الموافقة النهائية</h2>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm font-bold text-gray-700 dark:text-gray-300">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> قرأت شروط الاستخدام بالكامل وتوافق عليها.</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> أتحمل مسؤولية البيانات المدخلة.</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> أوافق على استخدام موقعي أثناء الطوارئ.</div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <div id="content-en" dir="ltr" class="text-left hidden transition-opacity duration-300">
+            <header class="text-center mb-12">
+                <h1 class="text-3xl md:text-4xl font-black mb-3 text-gray-900 dark:text-white">EnQaZ Terms of Use</h1>
+                <p class="text-gray-500 dark:text-gray-400 font-bold text-lg">EnQaZ Smart Emergency System — Device & Service Agreement</p>
+            </header>
+
+            <div class="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl border border-gray-200 dark:border-white/10 p-6 md:p-12">
+                
+                <section class="mb-10">
+                    <h2 class="text-2xl font-black text-primary mb-4 border-b-2 border-gray-100 dark:border-gray-800 pb-2">Introduction</h2>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed font-semibold text-lg">Welcome to EnQaZ (إنقاذ) Smart Emergency Response System. Please read the following Terms of Use carefully before applying for the device or using the system services. By applying for an EnQaZ device or using the platform, you agree to comply with all the terms and conditions outlined below.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">1. System Overview</h2>
+                    <p class="text-gray-600 dark:text-gray-300 mb-3 font-bold">EnQaZ is a smart emergency response system that includes:</p>
+                    <ul class="space-y-2 mb-6 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>A hardware device installed inside vehicles</li>
+                        <li>Accident detection and prediction system</li>
+                        <li>Automatic emergency alert transmission</li>
+                        <li>Nearest ambulance assignment and hospital routing</li>
+                    </ul>
+                    <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-5 rounded-2xl border-l-4 border-l-red-500">
+                        <h3 class="font-black text-red-700 dark:text-red-400 mb-3"><i class="fa-solid fa-triangle-exclamation mr-2"></i> When an accident or dangerous situation is detected:</h3>
+                        <ul class="space-y-2 text-red-600 dark:text-red-300 font-bold list-disc list-inside px-2">
+                            <li>The device sends an automatic alert to the system</li>
+                            <li>A 10-second cancellation window is provided to the user</li>
+                            <li>If not canceled, the incident is automatically confirmed</li>
+                            <li>The nearest ambulance is dispatched and nearest hospital is notified</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">2. Device Application Requirements</h2>
+                    <ul class="space-y-2 mb-6 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>Provide accurate personal information, valid phone number, and correct vehicle information.</li>
+                        <li>Accept Terms of Use and location tracking during emergencies.</li>
+                    </ul>
+                    <p class="text-orange-600 dark:text-orange-400 font-bold mb-2">EnQaZ reserves the right to reject any request if:</p>
+                    <p class="text-gray-600 dark:text-gray-400 font-semibold">Information is incorrect, incomplete, suspicious, or misuse of the system is suspected.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">3. User Responsibilities</h2>
+                    <ul class="space-y-2 mb-4 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>Provide accurate and valid information.</li>
+                        <li>Use the device only for emergency situations.</li>
+                        <li>Not tamper with or disable the device, or submit false emergency alerts.</li>
+                    </ul>
+                    <p class="text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg inline-block">The user is fully responsible for repeated false alerts and intentional device tampering.</p>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">4. Incident Handling Process</h2>
+                    <div class="space-y-4">
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl items-center border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-xl flex-shrink-0">1</div>
+                            <p class="font-bold text-gray-700 dark:text-gray-200">Device sends initial alert; 10-second cancellation countdown begins.</p>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-secondary dark:bg-white text-white dark:text-secondary flex items-center justify-center font-black text-xl flex-shrink-0">2</div>
+                            <div>
+                                <p class="font-black text-gray-800 dark:text-white mb-1">If not canceled:</p>
+                                <p class="font-semibold text-gray-600 dark:text-gray-400">Incident is confirmed, nearest ambulance is assigned, nearest hospital is selected, and response begins.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl items-center border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-full bg-gray-400 text-white flex items-center justify-center font-black text-xl flex-shrink-0">3</div>
+                            <p class="font-bold text-gray-700 dark:text-gray-200">If canceled within 10 seconds: The incident is canceled and logged in the system.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-10">
+                    <section>
+                        <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">5. Location Tracking</h2>
+                        <p class="text-gray-600 dark:text-gray-300 font-semibold mb-2">You agree to allow vehicle location tracking during emergencies to dispatch nearest ambulance.</p>
+                        <p class="text-success font-bold text-sm bg-success/10 p-2 rounded inline-block">Location is ONLY used in Accidents & Emergencies.</p>
+                    </section>
+                    <section>
+                        <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">6. Privacy & Data</h2>
+                        <p class="text-gray-600 dark:text-gray-300 font-semibold mb-2">We store User name, Phone, Vehicle info, and Incident history for system improvement.</p>
+                        <p class="text-blue-600 dark:text-blue-400 font-bold text-sm">Data is NOT shared with third parties except Ambulances, Hospitals, and Authorities.</p>
+                    </section>
+                </div>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">7. Liability & False Alerts</h2>
+                    <ul class="space-y-3 text-gray-600 dark:text-gray-300 font-semibold list-disc list-inside px-2">
+                        <li>In case of repeated false alerts, EnQaZ reserves the right to suspend the account or disable the device.</li>
+                        <li>EnQaZ provides smart assistance, but <strong>response time is not guaranteed</strong> as it depends on ambulance availability, GPS accuracy, and network availability.</li>
+                        <li>EnQaZ is not responsible for ambulance delays, network issues, or device misuse.</li>
+                    </ul>
+                </section>
+
+                <section class="mb-10">
+                    <h2 class="text-xl font-black text-gray-800 dark:text-white mb-4">8. Term Updates & Termination</h2>
+                    <p class="text-gray-600 dark:text-gray-300 font-semibold">EnQaZ reserves the right to update Terms of Use and policies. Users will be notified. Service may be terminated if requested by the user, or if terms are violated.</p>
+                </section>
+
+                <section class="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">Final Agreement</h2>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm font-bold text-gray-700 dark:text-gray-300">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> I have read all Terms of Use.</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> I accept responsibility for submitted data.</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-success"></i> I agree to emergency location tracking.</div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-8 text-center text-gray-400 font-bold text-sm">
+        &copy; 2026 EnQaZ System. All rights reserved.
+    </footer>
+
+    <script type="module" src="../js/core/theme.js"></script>
+    <script type="module" src="../js/core/language.js"></script>
+    <script type="module">
+        import { currentLang } from '../js/core/language.js';
+
+        const arBlock = document.getElementById('content-ar');
+        const enBlock = document.getElementById('content-en');
+        const langToggleBtn = document.getElementById('langToggleBtn');
+        const navReturnLink = document.getElementById('navReturnLink');
+
+        // وظيفة تغيير النصوص واتجاه الصفحة بناءً على اللغة
+        function renderTerms(lang) {
+            if(lang === 'ar') {
+                arBlock.classList.remove('hidden');
+                enBlock.classList.add('hidden');
+                langToggleBtn.innerText = 'EN';
+                navReturnLink.innerText = 'العودة للتقديم';
+                document.title = "EnQaZ | شروط الاستخدام";
+            } else {
+                enBlock.classList.remove('hidden');
+                arBlock.classList.add('hidden');
+                langToggleBtn.innerText = 'AR';
+                navReturnLink.innerText = 'Return to Application';
+                document.title = "EnQaZ | Terms of Use";
+            }
+        }
+
+        // تشغيل اللغة المحفوظة أول ما الصفحة تفتح
+        renderTerms(currentLang);
+
+        // الاستماع لايفنت تغيير اللغة اللي بيحصل في ملف language.js
+        window.addEventListener('languageChanged', (e) => {
+            renderTerms(e.detail.lang);
+        });
+    </script>
+</body>
+</html>

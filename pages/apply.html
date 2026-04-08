@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="transition-colors duration-500">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnQaZ | Device Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Cairo', 'sans-serif'] }, colors: { primary: '#dc2626', secondary: '#0f172a', success: '#10b981' } } } }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-[#020408] text-secondary dark:text-gray-200 min-h-screen flex flex-col relative overflow-x-hidden transition-colors duration-500">
+
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+    <nav class="w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 p-4 flex justify-between items-center sticky top-0 z-50">
+        <a href="../index.html" class="flex items-center gap-2 font-black text-2xl text-primary">
+            <i class="fa-solid fa-truck-medical"></i> <span data-i18n="logo">EnQaZ</span>
+        </a>
+        <div class="flex items-center gap-4">
+            <button id="themeToggleBtn" class="text-xl hover:scale-110 transition-transform"><span id="themeIcon">🌙</span></button>
+            <button id="langToggleBtn" class="font-bold text-sm px-3 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">AR</button>
+            <a href="../index.html" class="text-sm font-bold text-gray-500 hover:text-primary transition" data-i18n="returnHome">Return to Home</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 container mx-auto max-w-5xl p-6">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-black mb-2 text-gray-800 dark:text-white" data-i18n="applyTitle">Apply for EnQaZ Device</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-semibold" data-i18n="applyDesc">Please fill out all information accurately to ensure fast processing.</p>
+        </header>
+
+        <form id="applyForm" class="space-y-8 bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-xl border-2 border-gray-200 dark:border-white/10 transition-colors">
+            
+            <section>
+                <h3 class="text-lg font-bold border-b border-gray-200 dark:border-white/10 pb-2 mb-4 text-primary"><i class="fa-solid fa-user-tag ltr:mr-2 rtl:ml-2"></i><span data-i18n="basicInfo">Basic Information</span></h3>
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="fullName">Full Name</span> <span class="text-red-500">*</span></label><input type="text" name="full_name" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="email">Email</span> <span class="text-red-500">*</span></label><input type="email" name="email" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="phone">Phone Number</span> <span class="text-red-500">*</span></label><input type="tel" name="phone" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="nationalId">National ID</span> <span class="text-red-500">*</span></label><input type="text" name="national_id" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    
+                    <div class="relative">
+                        <label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="governorate">Governorate</span> <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" id="govInput" name="governorate" required autocomplete="off" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm ltr:pr-10 rtl:pl-10 cursor-text">
+                            <i class="fa-solid fa-chevron-down absolute top-1/2 -translate-y-1/2 ltr:right-4 rtl:left-4 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        <div id="govDropdown" class="hidden absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl max-h-48 overflow-y-auto z-50 shadow-2xl"></div>
+                    </div>
+                    
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="city">City</span> <span class="text-red-500">*</span></label><input type="text" name="city" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div class="col-span-2"><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="addressDetail">Detailed Address</span> <span class="text-red-500">*</span></label><input type="text" name="address" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="text-lg font-bold border-b border-gray-200 dark:border-white/10 pb-2 mb-4 text-blue-600 dark:text-blue-400"><i class="fa-solid fa-car ltr:mr-2 rtl:ml-2"></i><span data-i18n="carInfo">Vehicle Information</span></h3>
+                <div class="grid md:grid-cols-3 gap-5">
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="carBrand">Car Brand</span> <span class="text-red-500">*</span></label><input type="text" name="car_brand" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="carModel">Car Model</span> <span class="text-red-500">*</span></label><input type="text" name="car_model" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="carYear">Car Year</span> <span class="text-red-500">*</span></label><input type="number" name="car_year" required min="1950" max="2026" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="carPlate">License Plate</span> <span class="text-red-500">*</span></label><input type="text" name="car_plate" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl uppercase font-bold outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="carColor">Car Color</span> <span class="text-red-500">*</span></label><input type="text" name="car_color" required class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="fuelType">Fuel Type</label><input type="text" name="fuel_type" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="text-lg font-bold border-b border-gray-200 dark:border-white/10 pb-2 mb-4 text-orange-500 dark:text-orange-400"><i class="fa-solid fa-phone-volume ltr:mr-2 rtl:ml-2"></i><span data-i18n="emergContacts">Emergency Contacts</span></h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4 p-5 bg-orange-50/30 dark:bg-orange-900/10 rounded-2xl border-2 border-orange-200 dark:border-orange-900/30 shadow-sm">
+                        <h4 class="font-bold text-sm text-orange-600 dark:text-orange-400" data-i18n="emerg1">Primary Contact</h4>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="contactName">Name</span> <span class="text-red-500">*</span></label><input type="text" name="emergency1_name" required class="w-full p-3.5 bg-white border-2 border-orange-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-orange-500 dark:focus:ring-orange-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="relation">Relation</span> <span class="text-red-500">*</span></label><input type="text" name="emergency1_relation" required class="w-full p-3.5 bg-white border-2 border-orange-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-orange-500 dark:focus:ring-orange-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300"><span data-i18n="phone">Phone</span> <span class="text-red-500">*</span></label><input type="tel" name="emergency1_phone" required class="w-full p-3.5 bg-white border-2 border-orange-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-orange-500 dark:focus:ring-orange-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="email">Email</label><input type="email" name="emergency1_email" class="w-full p-3.5 bg-white border-2 border-orange-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-orange-500 dark:focus:ring-orange-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                    </div>
+                    <div class="space-y-4 p-5 bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-gray-200 dark:border-white/10 shadow-sm">
+                        <h4 class="font-bold text-sm text-gray-600 dark:text-gray-400" data-i18n="emerg2">Secondary Contact</h4>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="contactName">Name</label><input type="text" name="emergency2_name" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-400/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="relation">Relation</label><input type="text" name="emergency2_relation" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-400/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="phone">Phone</label><input type="tel" name="emergency2_phone" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-400/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                        <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="email">Email</label><input type="email" name="emergency2_email" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-400/10 dark:bg-gray-800 dark:border-gray-700 dark:text-white rounded-xl outline-none transition-all duration-300 text-gray-900"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="text-lg font-bold border-b border-gray-200 dark:border-white/10 pb-2 mb-4 text-purple-600 dark:text-purple-400"><i class="fa-solid fa-notes-medical ltr:mr-2 rtl:ml-2"></i><span data-i18n="medicalInfo">Medical Profile</span></h3>
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="bloodType">Blood Type</label>
+                        <select name="blood_type" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-purple-500 dark:focus:ring-purple-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 cursor-pointer shadow-sm">
+                            <option value="">Unknown</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="chronicDis">Chronic Conditions</label><input type="text" name="medical_conditions" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-purple-500 dark:focus:ring-purple-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="allergies">Allergies</label><input type="text" name="allergies" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-purple-500 dark:focus:ring-purple-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                    <div><label class="block text-xs font-bold mb-1.5 text-gray-600 dark:text-gray-300" data-i18n="medications">Current Medications</label><input type="text" name="medications" class="w-full p-3.5 bg-white border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-purple-500 dark:focus:ring-purple-500/20 rounded-xl outline-none transition-all duration-300 text-gray-900 shadow-sm"></div>
+                </div>
+            </section>
+
+            <div class="pt-4 border-t border-gray-200 dark:border-white/10">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" required class="w-5 h-5 accent-primary rounded cursor-pointer border-2 border-gray-300 dark:border-gray-600">
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300" data-i18n="agreeTerms">I agree to the Terms of Use and confirm the data is correct.</span>
+                </label>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="submitBtn" class="w-full bg-primary text-white font-black py-4 rounded-2xl hover:bg-red-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 transform active:scale-[0.99]">
+                    <span data-i18n="submitApp">Submit Application</span> <i class="fa-solid fa-paper-plane rtl:rotate-180"></i>
+                </button>
+            </div>
+        </form>
+
+        <div id="successMsg" class="hidden text-center py-20 animate-fade-in bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl border border-gray-200 dark:border-white/10 mt-8">
+            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner border border-green-200 dark:border-green-800/50">
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-4 text-gray-800 dark:text-white" data-i18n="appSuccess">Application Submitted Successfully!</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto font-semibold" data-i18n="appSuccessDesc">Your data will be reviewed, and we will contact you via email within 24 hours.</p>
+            <a href="../index.html" class="bg-secondary dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-md" data-i18n="returnHome">Return to Home</a>
+        </div>
+    </main>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+    (function() {
+        emailjs.init("YKJgvPCGxkJif7-o3"); 
+    })();
+</script>
+    <script type="module" src="../js/core/theme.js"></script>
+    <script type="module" src="../js/core/language.js"></script>
+    <script type="module">
+        import { supabase } from '../js/config/supabase.js';
+        import { t } from '../js/core/language.js';
+        
+        // --- Custom Searchable Dropdown for Egypt Governorates ---
+        const govs = [
+            "القاهرة (Cairo)", "الإسكندرية (Alexandria)", "الجيزة (Giza)", "القليوبية (Qalyubia)", 
+            "بورسعيد (Port Said)", "السويس (Suez)", "الإسماعيلية (Ismailia)", "الشرقية (Sharkia)", 
+            "الدقهلية (Dakahlia)", "الغربية (Gharbia)", "المنوفية (Monufia)", "كفر الشيخ (Kafr El Sheikh)", 
+            "البحيرة (Beheira)", "دمياط (Damietta)", "مطروح (Matrouh)", "شمال سيناء (North Sinai)", 
+            "جنوب سيناء (South Sinai)", "بني سويف (Beni Suef)", "المنيا (Minya)", "الفيوم (Fayoum)", 
+            "أسيوط (Assiut)", "سوهاج (Sohag)", "قنا (Qena)", "الأقصر (Luxor)", "أسوان (Aswan)", 
+            "الوادي الجديد (New Valley)", "البحر الأحمر (Red Sea)"
+        ];
+
+        const govInput = document.getElementById('govInput');
+        const govDropdown = document.getElementById('govDropdown');
+
+        function renderGovs(filter = '') {
+            const filtered = govs.filter(g => g.toLowerCase().includes(filter.toLowerCase()));
+            if(filtered.length === 0) {
+                govDropdown.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400 text-sm font-bold">لا توجد نتائج (No results)</div>`;
+                return;
+            }
+            govDropdown.innerHTML = filtered.map(g => `
+                <div class="p-3.5 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-white border-b border-gray-100 dark:border-gray-700 last:border-none transition-colors text-sm font-bold">${g}</div>
+            `).join('');
+            
+            govDropdown.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', () => {
+                    govInput.value = div.innerText.split(' (')[0]; // Store the Arabic name primarily
+                    govDropdown.classList.add('hidden');
+                });
+            });
+        }
+
+        govInput.addEventListener('focus', () => { renderGovs(govInput.value); govDropdown.classList.remove('hidden'); });
+        govInput.addEventListener('input', (e) => { renderGovs(e.target.value); govDropdown.classList.remove('hidden'); });
+        document.addEventListener('click', (e) => {
+            if (!govInput.contains(e.target) && !govDropdown.contains(e.target)) {
+                govDropdown.classList.add('hidden');
+            }
+        });
+
+        // --- Form Submission Logic ---
+        const form = document.getElementById('applyForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showToast(msg, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-success' : 'bg-red-500';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-xmark';
+            toast.className = `flex items-center gap-3 ${bg} text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 transform -translate-y-full opacity-0 font-bold`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span class="text-sm">${msg}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.remove('-translate-y-full', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${t('processing')}`;
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+try {
+                // تحويل الموديل (سنة الصنع) إلى رقم
+                data.car_year = parseInt(data.car_year);
+                
+                // 1. إرسال البيانات لقاعدة البيانات فقط (بدون EmailJS)
+                const { error } = await supabase.from('device_applications').insert([data]);
+                if (error) throw error;
+
+                // 2. إظهار رسالة النجاح في الواجهة وإخفاء الفورم
+                form.classList.add('hidden');
+                document.getElementById('successMsg').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                // في حالة حدوث خطأ أثناء الحفظ في قاعدة البيانات
+                showToast(error.message, "error");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span data-i18n="submitApp">${t('submitApp')}</span> <i class="fa-solid fa-paper-plane rtl:rotate-180"></i>`;
+            }
+        });
+    </script>
+</body>
+</html>
