@@ -180,11 +180,10 @@ window.viewApplication = function(id) {
     setTimeout(() => { m.classList.remove('opacity-0'); m.children[0].classList.remove('scale-95'); }, 10);
 };
 
-// --- دالة مساعدة لإرسال الإيميلات عبر EmailJS ---
+
 async function sendAppEmail(appData, type, extraData = {}) {
-    // يجب إنشاء 2 Templates في EmailJS (واحد للقبول وواحد للرفض)
-    // واستبدال Service ID و Template IDs بالخاصة بك
     const serviceID = "service_j22noer"; 
+    
     let templateID = "";
     let templateParams = {
         to_name: appData.full_name,
@@ -193,27 +192,26 @@ async function sendAppEmail(appData, type, extraData = {}) {
     };
 
     if (type === 'approved') {
-        templateID = "template_l1egc0w"; // قالب القبول
-        templateParams.password = extraData.password; // الباسورد الذي تم إنشاؤه
-        templateParams.login_url = window.location.origin + "/pages/login.html"; // رابط الدخول
+        templateID = "template_l1egc0w"; 
+        templateParams.password = extraData.password; 
+        templateParams.login_url = window.location.origin + "/pages/login.html"; 
     } else if (type === 'rejected') {
-        templateID = "template_79afdrq"; // قالب الرفض
+        templateID = "template_79afdrq"; 
         templateParams.reason = extraData.reason;
     }
 
-try {
+    try {
         await emailjs.send(
             serviceID, 
             templateID, 
             templateParams, 
-            "8fI0g8yL4O0Xk0A6P" // <-- ضع المفتاح العام الخاص بك هنا
+            "YKJgvPCGxkJif7-o3" // <-- تم وضع المفتاح العام الصحيح هنا
         );
         console.log(`Email sent successfully for app ${appData.id}`);
     } catch (error) {
         console.error("Failed to send email:", error);
     }
 }
-
 // --- تعديل دالة القبول ---
 window.approveApplication = async function(id) {
     const app = allApps.find(a => a.id === id);
@@ -253,10 +251,11 @@ window.approveApplication = async function(id) {
                 if(dErr) throw dErr;
 
                 // 4. Update Application Status
-                const { error: aErr } = await supabase.from('device_applications').update({
-                    status: 'approved',
-                    reviewed_at: new Date()
-                }).eq('id', id);
+const { error: aErr } = await supabase.from('device_applications').update({
+    status: 'approved',
+    // reviewed_by: adminId,  <-- Remove or comment out this line
+    reviewed_at: new Date()
+}).eq('id', id);
                 if(aErr) throw aErr;
 
                 // 5. إرسال الإيميل للمستخدم ببيانات الدخول
@@ -276,36 +275,7 @@ window.approveApplication = async function(id) {
 };
 
 // --- تعديل دالة الرفض/التعليق ---
-window.processAppStatus = function(id, newStatus) {
-    const isReject = newStatus === 'rejected';
-    const title = isReject ? (t('btnReject') || 'Reject') : (t('btnSuspend') || 'Suspend');
-    const desc = isReject ? "يرجى كتابة سبب الرفض (سيتم إرساله للعميل عبر الإيميل)." : "يرجى كتابة سبب التعليق.";
 
-    window.openInputModal(title, desc, async (reason) => {
-        try {
-            const { error } = await supabase.from('device_applications').update({
-                status: newStatus,
-                rejection_reason: reason || null,
-                reviewed_at: new Date()
-            }).eq('id', id);
-
-            if(error) throw error;
-
-            // إرسال إيميل الرفض للعميل
-            if (isReject) {
-                const app = allApps.find(a => a.id === id);
-                await sendAppEmail(app, 'rejected', { reason: reason || 'لا يستوفي الشروط حالياً' });
-            }
-
-            window.showToast(`Application marked as ${newStatus}.`, 'success');
-            window.closeDetailsModal('viewAppModal');
-            await loadApplicationsData();
-
-        } catch (error) {
-            window.showToast("Status update failed: " + error.message, "error");
-        }
-    }, isReject);
-};
 
 window.processAppStatus = function(id, newStatus) {
     const isReject = newStatus === 'rejected';
