@@ -1,13 +1,8 @@
 // ============================================================================
-// 🗺️ ResQ Map & Simulation Engine (Advanced Dynamic Module)
+// 🗺️ EnQaZ Map Engine (Advanced Dynamic Module) - Anti-Jitter Version
 // ============================================================================
 
-const savedSimConfig = JSON.parse(localStorage.getItem('resq_sim_config') || '{}');
 export const SIM_CONFIG = {
-    AMBULANCE_SPEED_KPH: savedSimConfig.AMBULANCE_SPEED_KPH || 600, 
-    CAR_SPEED_KPH: savedSimConfig.CAR_SPEED_KPH || 200,
-    PATROL_RADIUS: savedSimConfig.PATROL_RADIUS || 0.03,
-    ROAMING_RADIUS: savedSimConfig.PATROL_RADIUS ? savedSimConfig.PATROL_RADIUS * 2 : 0.06,
     OSRM_URL: 'https://router.project-osrm.org/route/v1/driving/'
 };
 
@@ -15,14 +10,15 @@ export const MapEngine = {
     map: null,
     layerGroups: { hospitals: null, ambulances: null, incidents: null, devices: null, routes: null },
     markers: { hospitals: {}, ambulances: {}, incidents: {}, devices: {} },
-    routes: {},
-    activeTasks: {},
     trafficLayerGroup: null,
     heatmapLayerGroup: null,
     trackedEntity: null, 
     incidentRoutes: {},
+    
+    // 🛡️ درع الحماية: يمنع تداخل الأوامر السريعة مع الانتقال السينمائي
+    isFlying: false, 
 
-    // استخراج الإحداثيات الحية بدقة تامة (تستخدم لزرع الحادث فوق السيارة)
+    // استخراج الإحداثيات الحية بدقة
     getEntityLatLng(type, id) {
         const marker = this.markers[type]?.[String(id)];
         if (marker) {
@@ -68,12 +64,59 @@ export const MapEngine = {
             }
         } catch(e) { console.error("Failed to draw rescue route", e); }
     },
-    
+    isMapInteracting: false,
     init(containerId, centerLat = 30.0444, centerLng = 31.2357, onMarkerClick) {
         if(this.map) return; 
         this.map = L.map(containerId, { zoomControl: false }).setView([centerLat, centerLng], 12);
         L.control.zoom({ position: 'bottomright' }).addTo(this.map);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(this.map);
+        
+        // 🛡️ المعالجة الذكية: حماية الخريطة أثناء الزووم أو الكليك
+        const origSetView = this.map.setView.bind(this.map);
+        this.map.setView = function(center, zoom, options) {
+            // تجاهل أي أمر إذا كانت الخريطة تقوم بـ Zoom أو FlyTo حالياً
+            if (MapEngine.isFlying || this._animatingZoom) return this;
+            return origSetView(center, zoom, options);
+        };
+// إضافة مستمعات الأحداث (Event Listeners) لإيقاف الـ CSS Transition أثناء الزووم
+        // this.map.on('zoomstart', () => {
+        //     this.map.getContainer().classList.add('is-zooming');
+        // });
+        
+        // this.map.on('zoomend', () => {
+        //     this.map.getContainer().classList.remove('is-zooming');
+        // });
+        this.map.on('zoomstart dragstart', () => {
+            this.isMapInteracting = true;
+            this.map.getContainer().classList.add('is-interacting');
+        });
+        
+        this.map.on('zoomend dragend', () => {
+            this.map.getContainer().classList.remove('is-interacting');
+            // تأخير نصف ثانية قبل إعادة التتبع لضمان نعومة العودة
+            setTimeout(() => { this.isMapInteracting = false; }, 500);
+        });
+        const origPanTo = this.map.panTo.bind(this.map);
+        this.map.panTo = function(center, options) {
+            if (MapEngine.isFlying || this._animatingZoom) return this;
+            return origPanTo(center, options);
+        };
+
+        // 🌟 قائمة مزودي الخرائط
+        const mapProviders = [
+            'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', 
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', 
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' 
+        ];
+        
+        let currentProviderIndex = 0;
+        let baseLayer = L.tileLayer(mapProviders[currentProviderIndex], { maxZoom: 19 }).addTo(this.map);
+
+        baseLayer.on('tileerror', () => {
+            currentProviderIndex++;
+            if (currentProviderIndex < mapProviders.length) {
+                baseLayer.setUrl(mapProviders[currentProviderIndex]);
+            }
+        });
         
         this.layerGroups.hospitals = L.layerGroup().addTo(this.map);
         this.layerGroups.ambulances = L.layerGroup().addTo(this.map);
@@ -90,11 +133,12 @@ export const MapEngine = {
         else this.map.removeLayer(this.layerGroups[layerName]);
     },
 
+    // 🌟 استعادة الأسماء القديمة للكلاسات التي تضمن الثبات أثناء الـ Zoom 🌟
     getAmbIcon(color, status) {
         let baseColor = status === 'available' || status === 'idle' ? 'bg-blue-500' : (status === 'assigned' ? 'bg-warning' : (status === 'returning' ? 'bg-gray-500' : 'bg-purple-500'));
         let pulseHtml = status === 'assigned' ? `<div class="absolute -inset-2 rounded-full border-2 border-warning animate-ping opacity-50"></div>` : '';
         return L.divIcon({
-            className: 'custom-div-icon',
+            className: 'custom-div-icon', 
             html: `<div class="relative w-8 h-8 ${baseColor} rounded-xl shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transform transition-transform duration-500 hover:scale-110 z-20">${pulseHtml}<i class="fa-solid fa-truck-medical text-white text-xs"></i></div>`,
             iconSize: [32, 32], iconAnchor: [16, 16] 
         });
@@ -154,7 +198,6 @@ export const MapEngine = {
             }
         }
         
-        // 🌟 التنظيف التلقائي لمسارات الحوادث المنتهية 🌟
         if (type === 'incidents') {
             Object.keys(this.incidentRoutes).forEach(routeId => {
                 if (!currentIds.has(routeId)) {
@@ -173,144 +216,85 @@ export const MapEngine = {
                 if (!this.markers[type][id]) {
                     const icon = this.getIconForType(type, item);
                     const marker = L.marker([lat, lng], { icon: icon });
+                    
+                    marker.currentStatus = item.status; // 🌟 حفظ الحالة يمنع إعادة رسم الأيقونة عشوائياً
+                    
                     if (item.heading && typeof marker.setRotationAngle === 'function') marker.setRotationAngle(item.heading);
                     
                     marker.on('click', () => { if(this.onMarkerClick) this.onMarkerClick(type, id); });
                     marker.addTo(this.layerGroups[type]);
                     this.markers[type][id] = marker;
-                } else {
-                    if (!this.activeTasks[`${type}_${id}`]) {
-                        this.markers[type][id].setLatLng([lat, lng]);
-                    }
-                    if (item.heading && typeof this.markers[type][id].setRotationAngle === 'function') this.markers[type][id].setRotationAngle(item.heading);
+} else {
+                    const marker = this.markers[type][id];
                     
-                    if(type !== 'devices') {
+                    // 🛡️ حماية الـ Leaflet أثناء الزووم عند عمل Update All UI
+                    const curLatLng = marker.getLatLng();
+                    if (curLatLng.lat !== lat || curLatLng.lng !== lng) {
+                        // لا نحدث الموقع إذا كانت الخريطة في وضع الـ Animation الخاص بالزووم
+                        if (!this.map._animatingZoom) {
+                            marker.setLatLng([lat, lng]);
+                        }
+                    }
+                    
+                    if (item.heading && typeof marker.setRotationAngle === 'function') {
+                        marker.setRotationAngle(item.heading);
+                    }
+                    
+                    // 🌟 لا تقم بتحديث شكل الأيقونة إلا إذا تغيرت حالتها (لحماية الأنيميشن)
+                    if(type !== 'devices' && marker.currentStatus !== item.status) {
                         const newIcon = this.getIconForType(type, item);
-                        this.markers[type][id].setIcon(newIcon);
+                        marker.setIcon(newIcon);
+                        marker.currentStatus = item.status;
                     }
                 }
             }
         });
     },
+focusOnEntity(type, id) {
+    // 1. فك التتبع فوراً بمجرد الضغط على أي عنصر جديد
+    this.trackedEntity = null;
+    this.targetCameraPos = null;
 
-    focusOnEntity(type, id) {
-        const coords = this.getEntityLatLng(type, id);
-        if (coords) {
-            this.map.flyTo([coords.lat, coords.lng], 16, { animate: true, duration: 0.8 });
-        }
-    },
+    const coords = this.getEntityLatLng(type, id);
+    if (coords) {
+        // 2. الانتقال للعنصر الجديد
+        this.map.flyTo([coords.lat, coords.lng], 16, { animate: true, duration: 0.8 });
+    }
+},
+targetCameraPos: null,
+    currentCameraPos: null,
+    isMapInteracting: false,
 
+    // 🎯 دالة التتبع الجديدة (الذكية)
     toggleTracking(type, id) {
         const entityKey = `${type}_${id}`;
+        
+        // 1. إذا ضغط المستخدم على نفس العنصر الذي يتتبعه حالياً -> إلغاء التتبع
         if (this.trackedEntity === entityKey) {
             this.trackedEntity = null; 
+            this.targetCameraPos = null;
+            this.currentCameraPos = null;
             return false;
         } else {
+            // 2. الانتقال لتتبع عنصر جديد (حتى لو كان هناك عنصر آخر قيد التتبع)
             this.trackedEntity = entityKey;
-            this.focusOnEntity(type, id); 
+            
+            // جلب الإحداثيات الحالية للعنصر الجديد
+            const coords = this.getEntityLatLng(type, id);
+            
+            if (coords) {
+                // إعادة ضبط الكاميرا على الهدف الجديد فوراً
+                this.targetCameraPos = coords;
+                this.currentCameraPos = { ...coords }; // قفزة مبدئية لمنع الاهتزاز
+                
+                // الطيران نحو الهدف الجديد بسلاسة
+                this.map.flyTo([coords.lat, coords.lng], 16, { animate: true, duration: 0.8 });
+            } else {
+                this.focusOnEntity(type, id); // Fallback
+            }
             return true;
         }
     },
-
-    async simulateMovementAlongRoad(type, id, startLat, startLng, targetLat, targetLng, baseSpeedKph, onUpdate, useRouting = false) {
-        const strId = String(id);
-        const taskKey = `${type}_${strId}`;
-        
-        // منع التكرار
-        if (this.activeTasks[taskKey]) return;
-        this.activeTasks[taskKey] = "loading"; // حالة مبدئية
-
-        const sLat = parseFloat(startLat);
-        const sLng = parseFloat(startLng);
-        const tLat = parseFloat(targetLat);
-        const tLng = parseFloat(targetLng);
-
-        if (isNaN(sLat) || isNaN(sLng) || isNaN(tLat) || isNaN(tLng)) {
-            delete this.activeTasks[taskKey];
-            return;
-        }
-
-        const fps = 30;
-        const stepTime = 1000 / fps;
-        let coords = [];
-
-        if (useRouting) {
-            try {
-                const url = `${SIM_CONFIG.OSRM_URL}${sLng},${sLat};${tLng},${tLat}?overview=full&geometries=geojson`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("OSRM Failed");
-                const data = await res.json();
-                if (!data.routes || data.routes.length === 0) throw new Error("No Route");
-                coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            } catch (e) {
-                coords = [[sLat, sLng], [tLat, tLng]];
-            }
-        } else {
-            coords = [[sLat, sLng], [tLat, tLng]];
-        }
-
-        // التأكد من أن المهمة لم يتم إلغاؤها (Cancel Incident) أثناء تحميل المسار
-        if (this.activeTasks[taskKey] !== "loading") return; 
-
-        let currentStep = 0;
-        let currentSpeedKph = baseSpeedKph || 100;
-        let targetSpeedKph = baseSpeedKph || 100;
-
-        this.activeTasks[taskKey] = setInterval(() => {
-            const marker = this.markers[type]?.[strId];
-            if (!marker || currentStep >= coords.length - 1) {
-                clearInterval(this.activeTasks[taskKey]);
-                delete this.activeTasks[taskKey];
-                if (onUpdate) onUpdate(tLat, tLng, 0, 0);
-                return;
-            }
-
-            // 🌟 قوة التسارع الفيزيائية المستقرة (السيارات تنطلق وتتوقف بشكل طبيعي وسريع) 🌟
-            if (currentSpeedKph < targetSpeedKph) currentSpeedKph += 4.0; 
-            else if (currentSpeedKph > targetSpeedKph) currentSpeedKph -= 6.0; 
-
-            if (Math.random() < 0.05) {
-                const min = (baseSpeedKph || 100) * 0.95;
-                const max = (baseSpeedKph || 100) * 1.05;
-                targetSpeedKph = Math.random() * (max - min) + min;
-            }
-
-            const speedMps = currentSpeedKph * (1000 / 3600);
-            const distPerStepMeters = speedMps / fps;
-            const distPerStepDeg = distPerStepMeters / 111000;
-
-            const p1 = coords[currentStep];
-            const p2 = coords[currentStep + 1];
-            
-            let currentLat = parseFloat(marker.getLatLng().lat);
-            let currentLng = parseFloat(marker.getLatLng().lng);
-
-            const dLat = p2[0] - currentLat;
-            const dLng = p2[1] - currentLng;
-            const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-
-            if (distance < distPerStepDeg) {
-                currentStep++;
-            } else {
-                const ratio = distPerStepDeg / distance;
-                currentLat += dLat * ratio;
-                currentLng += dLng * ratio;
-                let heading = (Math.atan2(dLng, dLat) * 180 / Math.PI);
-
-                marker.setLatLng([currentLat, currentLng]);
-                if (typeof marker.setRotationAngle === 'function') marker.setRotationAngle(heading);
-
-                if (this.trackedEntity === taskKey) {
-                    this.map.panTo([currentLat, currentLng], { animate: false });
-                }
-
-                // إرسال التحديث لـ Dashboard لتحديث الكارت والذاكرة
-                if (onUpdate) onUpdate(currentLat, currentLng, heading, currentSpeedKph);
-            }
-        }, stepTime);
-    },
-
-    trafficTimer: null,
 
     toggleTraffic(isVisible) {
         if (isVisible) {
@@ -341,7 +325,7 @@ export const MapEngine = {
         const minLng = bounds.getSouthWest().lng;
         const maxLng = bounds.getNorthEast().lng;
 
-        const numSpots = Math.floor(Math.random() * 15) + 15;
+        const numSpots = Math.floor(Math.random() * 20) + 10; 
 
         for (let i = 0; i < numSpots; i++) {
             const startLat = minLat + Math.random() * (maxLat - minLat);
@@ -349,11 +333,10 @@ export const MapEngine = {
             const endLat = startLat + (Math.random() - 0.5) * 0.01;
             const endLng = startLng + (Math.random() - 0.5) * 0.01;
             const isHeavy = Math.random() > 0.5;
-            const color = isHeavy ? '#ef4444' : '#f59e0b';
-            const weight = isHeavy ? 5 : 4;
+            const color = isHeavy ? '#ef4444' : '#f59e0b'; 
 
             L.polyline([[startLat, startLng], [endLat, endLng]], {
-                color: color, weight: weight, opacity: 0.8
+                color: color, weight: isHeavy ? 5 : 4, opacity: 0.8
             }).addTo(this.trafficLayerGroup);
         }
     },

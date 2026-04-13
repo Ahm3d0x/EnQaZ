@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnQaZ Core Engine | System Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['Fira Code', 'monospace'] },
+                    colors: {
+                        term: { bg: '#050505', text: '#00ff41', dim: '#008f11', alert: '#ff003c', warn: '#ffb000' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #00ff41; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #008f11; }
+        .crt-effect::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+        .blinking-cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .log-entry { animation: slideIn 0.2s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body class="h-screen w-screen font-mono text-xs sm:text-sm flex flex-col crt-effect relative">
+
+    <header class="h-16 border-b border-term-dim/30 bg-term-bg flex items-center justify-between px-6 z-10 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-3 h-3 bg-term-text rounded-full animate-ping"></div>
+            <h1 class="text-lg font-bold tracking-widest uppercase"><i class="fa-solid fa-microchip mr-2"></i> EnQaZ Core Engine v3.1</h1>
+        </div>
+        <div class="flex items-center gap-6 text-term-dim font-bold">
+            <div id="sys-uptime" title="Uptime">UP: 00:00:00</div>
+            <div id="sys-db" title="Supabase DB State"><i class="fa-solid fa-database mr-1"></i> <span class="text-term-text">DB: CONNECTED</span></div>
+            <div id="sys-broadcast" title="Broadcast Rate"><i class="fa-solid fa-satellite-dish mr-1"></i> <span id="brd-rate" class="text-term-text">0 Hz</span></div>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden z-10">
+        
+        <div class="col-span-5 border border-term-dim/30 rounded-lg bg-black flex flex-col overflow-hidden relative shadow-[0_0_15px_rgba(0,255,65,0.1)]">
+            <div class="bg-term-dim/20 px-3 py-1 border-b border-term-dim/30 font-bold text-[10px] uppercase flex justify-between">
+                <span>System_Terminal //</span>
+                <button id="clear-logs-btn" class="hover:text-term-text transition-colors"><i class="fa-solid fa-eraser"></i> Clear</button>
+            </div>
+            <div id="terminal-output" class="flex-1 p-3 overflow-y-auto space-y-1">
+                <div class="text-term-dim">Initializing EnQaZ Core Engine...</div>
+                <div class="text-term-dim">Loading modules: incidentLog, dispatch, simulator...</div>
+            </div>
+            <div class="p-3 border-t border-term-dim/30 bg-term-bg/50">
+                <span class="text-term-text">></span> <span class="blinking-cursor">_</span>
+            </div>
+        </div>
+
+        <div class="col-span-4 flex flex-col gap-4 overflow-hidden">
+            <div class="grid grid-cols-2 gap-4 shrink-0">
+                <div class="border border-term-dim/30 rounded-lg p-3 bg-black/50 text-center flex flex-col justify-center">
+                    <div class="text-term-dim text-[10px] uppercase mb-1">Active Incidents</div>
+                    <div id="stat-incidents" class="text-3xl font-bold text-term-alert">0</div>
+                </div>
+                <div class="border border-term-dim/30 rounded-lg p-3 bg-black/50 text-center flex flex-col justify-center">
+                    <div class="text-term-dim text-[10px] uppercase mb-1">Available Ambulances</div>
+                    <div id="stat-ambulances" class="text-3xl font-bold text-blue-500">0</div>
+                </div>
+            </div>
+            
+            <div class="flex-1 border border-term-dim/30 rounded-lg bg-[#020202] relative overflow-hidden flex items-center justify-center">
+                <div class="absolute inset-0 border-[0.5px] border-term-dim/10 rounded-full scale-150" style="background: repeating-radial-gradient(circle, transparent, transparent 40px, rgba(0, 143, 17, 0.1) 41px, transparent 42px);"></div>
+                <i class="fa-solid fa-radar fa-spin text-term-dim/20 text-9xl absolute"></i>
+                <div class="z-10 text-center">
+                    <div class="text-term-text/50 font-bold mb-2">SIMULATION RADAR</div>
+                    <div id="radar-status" class="text-term-dim text-[10px]">Awaiting Entities...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+            
+            <div class="flex-1 border border-term-dim/30 rounded-lg bg-black flex flex-col overflow-hidden">
+                <div class="bg-term-warn/20 text-term-warn px-3 py-1 border-b border-term-warn/30 font-bold text-[10px] uppercase">
+                    <i class="fa-solid fa-stopwatch"></i> 10s Watchdog Queue
+                </div>
+                <div id="watchdog-queue" class="flex-1 p-2 overflow-y-auto space-y-2">
+                    <div class="text-center text-term-dim/50 text-[10px] mt-4">Queue is empty</div>
+                </div>
+            </div>
+
+            <div class="flex-1 border border-term-dim/30 rounded-lg bg-black flex flex-col overflow-hidden">
+                <div class="bg-blue-500/20 text-blue-500 px-3 py-1 border-b border-blue-500/30 font-bold text-[10px] uppercase">
+                    <i class="fa-solid fa-route"></i> OSRM Routing Queue
+                </div>
+                <div id="routing-queue" class="flex-1 p-2 overflow-y-auto space-y-2">
+                    <div class="text-center text-term-dim/50 text-[10px] mt-4">Queue is empty</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="h-14 border-t border-term-dim/30 bg-term-bg flex items-center justify-between px-6 z-10 shrink-0">
+        <div class="text-term-dim text-[10px]">Engine Core running locally. Do not close this tab to keep system functional.</div>
+        <div class="flex gap-3">
+            <button id="btn-sync-db" class="px-4 py-1.5 border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-black rounded text-[10px] font-bold transition-colors">
+                <i class="fa-solid fa-cloud-arrow-up"></i> FORCE SYNC DB
+            </button>
+            <button id="btn-kill-switch" class="px-4 py-1.5 border border-term-alert text-term-alert hover:bg-term-alert hover:text-black rounded text-[10px] font-bold transition-colors shadow-[0_0_10px_rgba(255,0,60,0.3)]">
+                <i class="fa-solid fa-power-off"></i> MASTER KILL SWITCH
+            </button>
+        </div>
+    </footer>
+
+    <script type="module" src="../js/engine/engineui.js"></script>
+    <script type="module" src="../js/engine/engineincidentlog.js"></script>
+    <script type="module" src="../js/engine/enginedispatch.js"></script>
+    <script type="module" src="../js/engine/enginesimulator.js"></script>
+    <script type="module" src="../js/engine/enginecivilians.js"></script>
+    <script type="module">
+        import { EngineUI } from '../js/engine/engineui.js';
+        // Initialize the UI manager immediately
+        EngineUI.init();
+        EngineUI.log('INFO', 'Core Engine UI initialized. Awaiting module attachments.');
+    </script>
+</body>
+</html>

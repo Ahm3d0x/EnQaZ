@@ -207,7 +207,7 @@
             }
         });
 
-        // Send Crash Signal
+// Send Crash Signal
         triggerBtn.addEventListener('click', async () => {
             const devId = deviceSelect.value;
             if (!devId) return;
@@ -222,14 +222,13 @@
             triggerBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Sending...";
 
             try {
-// 1. Create Hardware Request
-// 1. Create Hardware Request
+                // 1. Create Hardware Request ONLY (Acting strictly as hardware)
                 const { data: hwReq, error: hwErr } = await supabase.from(DB_TABLES.HARDWARE_REQUESTS).insert([{
                     device_id: dev.id,
                     request_type: 'alert',
-                    lat: liveData.lat, // 🔴 وضع الإحداثيات في أعمدتها المنفصلة
+                    lat: liveData.lat,
                     lng: liveData.lng,
-                    raw_payload: JSON.stringify({ // 🔴 تغيير الاسم إلى raw_payload وتحويل الكائن لنص
+                    raw_payload: JSON.stringify({
                         speed: liveData.speed,
                         g_force: gForce,
                         crash_detected: true
@@ -238,30 +237,15 @@
 
                 if (hwErr) throw hwErr;
 
-               // 2. Create Incident
-                const { data: incData, error: incErr } = await supabase.from(DB_TABLES.INCIDENTS).insert([{
-                    device_id: dev.id,
-                    latitude: liveData.lat,
-                    longitude: liveData.lng,
-                    speed: liveData.speed, // 🔴 تسجيل السرعة في عمودها المخصص
-                    g_force: gForce,       // 🔴 تسجيل قوة الاصطدام (G-Force) في عمودها المخصص
-                    status: 'pending',
-                    hardware_request_id: hwReq.id
-                }]).select().single();
-
-                if (incErr) throw incErr;
-
-                currentActiveIncident = incData;
-                updateUIState();
+                // 🔴 تم حذف كود إنشاء الحادثة (Incident) من هنا.
+                // لوحة التحكم (Dashboard Engine) هتلتقط هذا الطلب وتقوم بإنشاء الحادثة ببيانات كاملة.
 
             } catch (err) {
                 console.error("Crash Signal Error:", err);
-                alert("Failed to send crash signal.");
                 triggerBtn.disabled = false;
-                triggerBtn.innerHTML = "<i class='fa-solid fa-satellite-dish'></i> Send Crash Signal";
+                triggerBtn.innerHTML = "<i class='fa-solid fa-satellite-dish mr-2'></i> Send Crash Signal";
             }
         });
-
         // Cancel Signal
         cancelBtn.addEventListener('click', async () => {
             if (!currentActiveIncident) return;
@@ -296,14 +280,23 @@
             }
         });
 
-        // Realtime Subscription
-        supabase.channel('simulator-incidents').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: DB_TABLES.INCIDENTS }, payload => {
-            if (currentActiveIncident && payload.new.id === currentActiveIncident.id) {
-                currentActiveIncident = payload.new;
-                updateUIState();
-            }
-        }).subscribe();
-
+// Realtime Subscription
+        supabase.channel('simulator-incidents')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: DB_TABLES.INCIDENTS }, payload => {
+                if (currentActiveIncident && payload.new.id === currentActiveIncident.id) {
+                    currentActiveIncident = payload.new;
+                    updateUIState();
+                }
+            })
+            // إضافة مراقب لحدث الـ INSERT لالتقاط الحادثة فور إنشائها بواسطة النظام
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: DB_TABLES.INCIDENTS }, payload => {
+                const selectedDevId = deviceSelect.value;
+                if (!currentActiveIncident && String(payload.new.device_id) === String(selectedDevId)) {
+                    currentActiveIncident = payload.new;
+                    updateUIState();
+                }
+            })
+            .subscribe();
         function updateUIState() {
             if (currentActiveIncident && currentActiveIncident.status !== 'canceled' && currentActiveIncident.status !== 'completed') {
                 idleControlArea.classList.add('hidden');
