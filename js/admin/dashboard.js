@@ -1,11 +1,15 @@
 // ============================================================================
-// 🎛️ EnQaZ Dashboard Controller (Ultimate Architected Version)
+// 🎛️ EnQaZ Dashboard Controller (Luxury View & Telemetry Receiver) - V4.0
 // ============================================================================
 
 import { supabase, DB_TABLES } from '../config/supabase.js';
-import { t } from '../core/language.js';
 import { MapEngine, SIM_CONFIG } from './mapEngine.js';
+    const SMOOTHING_FACTOR = 0.001; // نعومة فائقة للحركة
 
+// 📡 إنشاء الاتصال بقناة البث اللحظي القادمة من المايكرو-سيرفر (Engine)
+export const trackingChannel = supabase.channel('live-tracking');
+
+// إعدادات النظام الحالية
 export const SysSettings = { 
     mode: localStorage.getItem('resq_sys_mode') || 'simulation',
     trackCivilians: JSON.parse(localStorage.getItem('resq_live_config') || '{"TRACK_CIVILIANS": true}').TRACK_CIVILIANS
@@ -14,27 +18,87 @@ export const SysSettings = {
 const sessionString = localStorage.getItem('resq_custom_session');
 const currentAdminId = sessionString ? JSON.parse(sessionString).id : null;
 
+// الذاكرة المؤقتة للواجهة (In-Memory State)
 window.rawData = { hospitals: {}, ambulances: {}, incidents: {}, devices: {} };
-window.simCacheRestored = false; 
 window.currentOpenPanel = { type: null, id: null }; 
+window.lastUiUpdateTime = 0;
 
-const simCache = JSON.parse(localStorage.getItem('resq_sim_positions') || '{}');
+// متغيرات التحكم في الكاميرا
+let targetCameraPos = null;
+let currentCameraPos = null;
+window.isUserInteracting = false;
+window.interactionTimeout = null;
 
+// 🎥 نظام الكاميرا السينمائي المطور (Anti-Fight System)
+function startSmoothCameraLoop() {
+    const mapContainer = document.getElementById('adminMap');
+    if (mapContainer) {
+        // 🌟 إيقاف الكاميرا فوراً بمجرد لمس المستخدم للشاشة لمنع التقطيع
+        const pauseTracking = () => { window.isUserInteracting = true; };
+        // 🌟 استئناف الكاميرا بعد التوقف عن اللمس بـ 1.5 ثانية
+        const resumeTracking = () => { 
+            clearTimeout(window.interactionTimeout);
+            window.interactionTimeout = setTimeout(() => { window.isUserInteracting = false; }, 1500); 
+        };
+
+        mapContainer.addEventListener('mousedown', pauseTracking);
+        mapContainer.addEventListener('touchstart', pauseTracking, {passive: true});
+        mapContainer.addEventListener('wheel', pauseTracking, {passive: true});
+        
+        window.addEventListener('mouseup', resumeTracking);
+        window.addEventListener('touchend', resumeTracking);
+        mapContainer.addEventListener('wheel', resumeTracking, {passive: true});
+    }
+
+
+    const loop = () => {
+        // التتبع يعمل فقط إذا كان هناك هدف، والمستخدم لا يلمس الخريطة حالياً
+        if (MapEngine.trackedEntity && MapEngine.targetCameraPos && !window.isUserInteracting) {
+            
+            if (!MapEngine.currentCameraPos) {
+                MapEngine.currentCameraPos = { ...MapEngine.targetCameraPos };
+            }
+
+            // معادلة التحريك الخطي (Lerp)
+            MapEngine.currentCameraPos.lat += (MapEngine.targetCameraPos.lat - MapEngine.currentCameraPos.lat) * SMOOTHING_FACTOR;
+            MapEngine.currentCameraPos.lng += (MapEngine.targetCameraPos.lng - MapEngine.currentCameraPos.lng) * SMOOTHING_FACTOR;
+
+            const distLat = Math.abs(MapEngine.targetCameraPos.lat - MapEngine.currentCameraPos.lat);
+            const distLng = Math.abs(MapEngine.targetCameraPos.lng - MapEngine.currentCameraPos.lng);
+
+            // تحديث الكاميرا فقط إذا كانت المسافة تستحق (لتخفيف الضغط وتقليل الـ Jitter)
+            if (distLat > 0.00001 || distLng > 0.00001) {
+                MapEngine.map.setView(
+                    [MapEngine.currentCameraPos.lat, MapEngine.currentCameraPos.lng], 
+                    MapEngine.map.getZoom(), 
+                    { animate: false }
+                );
+            }
+        }
+        requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+}
+
+/**
+ * 📝 تسجيل إجراءات الإدارة في سجل النظام
+ */
 async function logSystemAction(action, targetTable, targetId, note) {
     if (!currentAdminId) return;
     try {
         const safeTargetId = isNaN(targetId) || targetId === 'GLOBAL' ? 0 : parseInt(targetId);
-        await supabase.from('audit_admin_changes').insert([{
-            admin_user_id: currentAdminId, action: action, target_table: targetTable, target_id: safeTargetId, note: note
+        await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
+            incident_id: targetTable === 'incidents' ? safeTargetId : null,
+            action: action,
+            performed_by: `Admin ID: ${currentAdminId}`,
+            note: note
         }]);
     } catch (error) { console.error("Audit Log Failed:", error); }
 }
 
-const getCoords = (obj) => ({
-    lat: parseFloat(obj.lat || obj.latitude),
-    lng: parseFloat(obj.lng || obj.longitude)
-});
-
+/**
+ * 🚀 دالة التهيئة الرئيسية (نقطة الانطلاق)
+ */
 export async function initDashboard() {
     try {
         const { data: settings } = await supabase.from(DB_TABLES.SETTINGS).select('*');
@@ -49,6 +113,9 @@ export async function initDashboard() {
 
     MapEngine.init('adminMap', 30.0444, 31.2357, (type, id) => window.openPanel(type, id));
     
+    // 🌟 استدعاء واجهة البوصلة المطورة
+    addCompassUI();
+
     const mapToggleBtn = document.getElementById('toggleUsersMap');
     if (SysSettings.trackCivilians === false) {
         MapEngine.toggleLayer('devices', false);
@@ -60,15 +127,75 @@ export async function initDashboard() {
 
     await loadEntities();
     await loadDevices();
-    setupRealtime();
+    
+    setupDatabaseRealtime(); 
+    setupLiveTelemetry();    
+    startSmoothCameraLoop(); 
 
-    if (SysSettings.mode === 'simulation') {
-        setInterval(window.processSystemQueues, 2000);
-    }
     window.addEventListener('languageChanged', () => window.updateAllUI());
 }
 
+/**
+ * 🧭 دالة إضافة واجهة البوصلة (Compass UI) المحدثة بالدوران الحر
+ */
+function addCompassUI() {
+    const mapContainer = document.getElementById('mapContainer');
+    if (!mapContainer || document.getElementById('compassUI')) return;
+
+    const compassHtml = `
+        <div id="compassUI" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[500] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col items-center gap-3 transition-all duration-300 w-64">
+            <div class="flex items-center justify-between w-full">
+                <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest"><i class="fa-regular fa-compass"></i> البوصلة</div>
+                <div class="flex items-center gap-1">
+                    <button onclick="window.rotateMap(0)" class="w-6 h-6 bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white text-gray-700 dark:text-gray-300 rounded-full font-black text-[9px] transition-all shadow-sm">N</button>
+                    <button onclick="window.rotateMap(90)" class="w-6 h-6 bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white text-gray-700 dark:text-gray-300 rounded-full font-black text-[9px] transition-all shadow-sm">E</button>
+                    <button onclick="window.rotateMap(180)" class="w-6 h-6 bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white text-gray-700 dark:text-gray-300 rounded-full font-black text-[9px] transition-all shadow-sm">S</button>
+                    <button onclick="window.rotateMap(270)" class="w-6 h-6 bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white text-gray-700 dark:text-gray-300 rounded-full font-black text-[9px] transition-all shadow-sm">W</button>
+                </div>
+            </div>
+            <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
+            <div class="flex items-center gap-3 w-full">
+                <i class="fa-solid fa-rotate text-gray-400 text-[10px]"></i>
+                <input type="range" id="freeRotationSlider" min="0" max="360" value="0" step="1" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-primary" oninput="window.rotateMap(this.value, true)">
+                <span id="rotationValueDisplay" class="text-[10px] font-mono font-black text-primary w-8 text-right">0°</span>
+            </div>
+        </div>
+    `;
+    mapContainer.insertAdjacentHTML('beforeend', compassHtml);
+}
+
+// 🔄 دوال التحكم في دوران الخريطة والبوصلة (Global)
+window.rotateMap = function(angle, fromSlider = false) {
+    const mapEl = document.getElementById('adminMap');
+    const slider = document.getElementById('freeRotationSlider');
+    const display = document.getElementById('rotationValueDisplay');
+    
+    let safeAngle = parseInt(angle) || 0;
+    if (safeAngle === 360) safeAngle = 0;
+
+    if (mapEl) {
+        // نستخدم Scale ثابت لتجنب الارتجاج عند استخدام السلايدر
+        const scale = safeAngle === 0 ? 1 : 1.4; 
+        mapEl.style.transition = fromSlider ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        mapEl.style.transform = `scale(${scale}) rotate(${safeAngle}deg)`;
+    }
+
+    if (slider && !fromSlider) slider.value = safeAngle;
+    if (display) display.innerText = safeAngle + '°';
+};
+
+window.resetMapRotation = function() {
+    window.rotateMap(0);
+};
+
+/**
+ * 📥 جلب البيانات الأساسية من الداتابيز
+ */
 async function loadEntities() {
+    window.rawData.hospitals = {};
+    window.rawData.ambulances = {};
+    window.rawData.incidents = {};
+
     const [hospRes, ambRes, incRes] = await Promise.all([
         supabase.from(DB_TABLES.HOSPITALS).select('*'), 
         supabase.from(DB_TABLES.AMBULANCES).select('*, users(name, phone)'),
@@ -83,6 +210,7 @@ async function loadEntities() {
 }
 
 async function loadDevices() {
+    window.rawData.devices = {};
     const { data } = await supabase.from(DB_TABLES.DEVICES).select('*, users(name, phone)');
     if (data) {
         data.forEach(d => window.rawData.devices[d.id] = d);
@@ -90,47 +218,110 @@ async function loadDevices() {
     }
 }
 
-function setupRealtime() {
-    supabase.channel('dashboard-sync')
+/**
+ * 📡 الاستماع للتحديثات الجوهرية من قاعدة البيانات
+ */
+function setupDatabaseRealtime() {
+    supabase.channel('dashboard-db-sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: DB_TABLES.INCIDENTS }, payload => {
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                let newInc = payload.new;
-
-                if (newInc.status === 'pending' && SysSettings.trackCivilians && !newInc._snapped) {
-                    const devId = String(newInc.device_id);
-                    const liveCoords = MapEngine.getEntityLatLng('devices', devId); 
-
-                    if (liveCoords) {
-                        if (MapEngine.activeTasks[`devices_${devId}`]) {
-                            clearInterval(MapEngine.activeTasks[`devices_${devId}`]);
-                            delete MapEngine.activeTasks[`devices_${devId}`];
-                        }
-                        if (window.rawData.devices[devId]) window.rawData.devices[devId].currentSpeed = 0;
-
-                        newInc.latitude = liveCoords.lat;
-                        newInc.longitude = liveCoords.lng;
-                        newInc._snapped = true;
-
-                        supabase.from(DB_TABLES.INCIDENTS).update({
-                            latitude: liveCoords.lat,
-                            longitude: liveCoords.lng
-                        }).eq('id', newInc.id);
-                    }
+                const newInc = payload.new;
+                if (window.rawData.incidents[newInc.id]) {
+                    window.rawData.incidents[newInc.id] = { ...window.rawData.incidents[newInc.id], ...newInc };
+                } else {
+                    loadEntities(); 
                 }
-
-                window.rawData.incidents[newInc.id] = { ...window.rawData.incidents[newInc.id], ...newInc };
                 window.updateAllUI(); 
+            } else if (payload.eventType === 'DELETE') {
+                delete window.rawData.incidents[payload.old.id];
+                window.updateAllUI();
             }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: DB_TABLES.AMBULANCES }, payload => {
             if (payload.eventType === 'UPDATE') {
                 if (window.rawData.ambulances[payload.new.id]) {
-                    window.rawData.ambulances[payload.new.id] = { ...window.rawData.ambulances[payload.new.id], ...payload.new };
+                    window.rawData.ambulances[payload.new.id].status = payload.new.status;
                     window.updateAllUI();
                 }
             }
-        }).subscribe();
+        })
+        .subscribe();
 }
+
+/**
+ * 🏎️ المستقبل اللحظي للسرعة والحركة
+ */
+function setupLiveTelemetry() {
+    trackingChannel.on('broadcast', { event: 'fleet_update' }, (payload) => {
+        const fleetData = payload.payload;
+        fleetData.forEach(unit => {
+            const { id, lat, lng, heading, speed } = unit;
+            if (window.rawData.ambulances[id]) {
+                window.rawData.ambulances[id].lat = lat;
+                window.rawData.ambulances[id].lng = lng;
+                window.rawData.ambulances[id].currentSpeed = speed;
+
+                updateMarkerSmoothly('ambulances', id, lat, lng, heading);
+                window.updateLiveSpeedUI('ambulances', id, speed);
+            }
+        });
+    });
+
+    trackingChannel.on('broadcast', { event: 'civilians_update' }, (payload) => {
+        if (!SysSettings.trackCivilians) return;
+        const civData = payload.payload;
+        civData.forEach(car => {
+            const { id, lat, lng, heading, speed } = car;
+            if (window.rawData.devices[id]) {
+                window.rawData.devices[id].lat = lat;
+                window.rawData.devices[id].lng = lng;
+                window.rawData.devices[id].currentSpeed = speed;
+
+                updateMarkerSmoothly('devices', id, lat, lng, heading);
+                window.updateLiveSpeedUI('devices', id, speed);
+            }
+        });
+    });
+
+    trackingChannel.subscribe();
+}
+
+/**
+ * 🌟 تحريك وتوجيه المركبات بدقة فائقة
+ */
+function updateMarkerSmoothly(type, id, lat, lng, heading) {
+    const strId = String(id);
+    const marker = MapEngine.markers[type]?.[strId];
+    
+    if (marker) {
+        const curLatLng = marker.getLatLng();
+        const isMoved = curLatLng.lat !== lat || curLatLng.lng !== lng;
+        
+        // 1. تحديث الموقع
+        if (isMoved) {
+            marker.setLatLng([lat, lng]);
+        }
+
+        // 2. 🌟 تطبيق الدوران المستقل للأيقونة بناءً على اتجاه السيارة الحقيقي 🌟
+        // نستخدم خاصية rotate بدلاً من transform لتجنب مسح تأثيرات Tailwind
+        if (marker._icon && heading !== undefined) {
+            const iconDiv = marker._icon.firstElementChild; // استهداف الـ Div الداخلي
+            if (iconDiv) {
+                iconDiv.style.transition = 'rotate 1s linear';
+                iconDiv.style.rotate = `${heading}deg`;
+            }
+        }
+
+        // 3. تحديث هدف الكاميرا
+        if (MapEngine.trackedEntity === `${type}_${strId}`) {
+            MapEngine.targetCameraPos = { lat, lng };
+        }
+    }
+}
+
+// ============================================================================
+// 🎨 دوال تحديث الواجهة الرسومية (UI Renderers)
+// ============================================================================
 
 window.updateAllUI = function() {
     if (typeof window.renderIncidents === 'function') window.renderIncidents();
@@ -161,8 +352,6 @@ window.refreshCurrentPanel = function() {
     }
 };
 
-// 🌟 تحديث حي للكارت كل نصف ثانية لاستقرار الرقم وحماية المتصفح 🌟
-window.lastUiUpdateTime = 0;
 window.updateLiveSpeedUI = function(type, id, speed) {
     if (window.currentOpenPanel.type === type && window.currentOpenPanel.id === String(id)) {
         const now = Date.now();
@@ -183,6 +372,9 @@ window.renderIncidents = function() {
     const activeIncidents = Object.values(window.rawData.incidents)
         .filter(inc => inc.status !== 'completed' && inc.status !== 'canceled')
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const pendingBadge = document.getElementById('pendingCountBadge');
+    if (pendingBadge) pendingBadge.innerText = activeIncidents.length;
 
     if (activeIncidents.length === 0) {
         list.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm">لا توجد حوادث نشطة حالياً.</div>`;
@@ -257,7 +449,7 @@ window.renderDevices = function() {
     
     list.innerHTML = dataToRender.map(dev => {
         const hasIncident = allIncidents.find(inc => String(inc.device_id) === String(dev.id) && busyStatuses.includes(inc.status));
-        const isMoving = MapEngine.activeTasks[`devices_${dev.id}`];
+        const isMoving = dev.currentSpeed > 0;
         
         const iconClass = hasIncident ? 'fa-car-burst animate-bounce' : 'fa-car';
         const bgClass = hasIncident ? 'bg-red-600' : 'bg-gray-500';
@@ -302,12 +494,12 @@ window.openPanel = function(type, id) {
     else if (type === 'devices') {
         const busyStatuses = ['pending', 'assigned', 'in_progress', 'completed'];
         const activeIncident = Object.values(window.rawData.incidents).find(inc => String(inc.device_id) === String(data.id) && busyStatuses.includes(inc.status));
-        const isMoving = MapEngine.activeTasks[`devices_${data.id}`];
+        const isMoving = data.currentSpeed > 0;
         const isTracked = MapEngine.trackedEntity === `devices_${data.id}`; 
 
         let movementStatus = isMoving ? 'في طريق (مشوار)' : 'متوقفة';
         let movementColor = isMoving ? 'text-primary animate-pulse' : 'text-gray-400';
-        let speedText = isMoving ? Math.round(data.currentSpeed || SIM_CONFIG.CAR_SPEED_KPH || 80) + ' km/h' : '0 km/h';
+        let speedText = isMoving ? Math.round(data.currentSpeed || 0) + ' km/h' : '0 km/h';
 
         if (activeIncident) {
             movementStatus = '🚨 متورطة في حادث (في انتظار العلاج) 🚨';
@@ -330,24 +522,21 @@ window.openPanel = function(type, id) {
         `;
     } 
     else if (type === 'ambulances') {
-        const isPatrolling = MapEngine.activeTasks[`ambulances_${data.id}`];
         const isTracked = MapEngine.trackedEntity === `ambulances_${data.id}`; 
         
         let statusColor = 'text-blue-500';
         let currentTask = 'متوقفة';
-        let displaySpeed = isPatrolling ? (data.currentSpeed || SIM_CONFIG.AMBULANCE_SPEED_KPH || 120) : 0;
+        let displaySpeed = data.currentSpeed || 0;
 
         if (data.status === 'available') {
             statusColor = 'text-blue-500';
-            currentTask = isPatrolling ? 'دورية استطلاعية' : 'متوقفة (جاهزة)';
+            currentTask = displaySpeed > 0 ? 'دورية استطلاعية' : 'متوقفة (جاهزة)';
         } else if (data.status === 'assigned') {
             statusColor = 'text-warning';
             currentTask = '🚨 متجه لموقع الحادث 🚨';
-            displaySpeed = data.currentSpeed || (SIM_CONFIG.AMBULANCE_SPEED_KPH * 1.5) || 150;
         } else if (data.status === 'in_progress') {
             statusColor = 'text-purple-500';
             currentTask = '🏥 نقل المصاب للمستشفى 🏥';
-            displaySpeed = data.currentSpeed || (SIM_CONFIG.AMBULANCE_SPEED_KPH * 1.5) || 150;
         } else if (data.status === 'returning') {
             statusColor = 'text-gray-500';
             currentTask = '↩️ عائد للقاعدة';
@@ -403,10 +592,15 @@ window.openPanel = function(type, id) {
     panel.classList.remove(document.documentElement.dir === 'rtl' ? '-translate-x-[120%]' : 'translate-x-[120%]');
 };
 
+// ============================================================================
+// 🛠️ أفعال المستخدم (User Actions)
+// ============================================================================
+
 document.getElementById('ambulanceSearchInput')?.addEventListener('input', () => window.renderAmbulances());
 document.getElementById('deviceSearchInput')?.addEventListener('input', () => window.renderDevices());
 
 window.routeColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+
 window.toggleIncidentRouteAction = function(incId, color) {
     const inc = window.rawData.incidents[incId];
     if (!inc || !inc.assigned_ambulance_id || !inc.assigned_hospital_id) {
@@ -438,16 +632,15 @@ window.toggleTrafficAction = function(isChecked) {
     MapEngine.toggleTraffic(isChecked);
 };
 
-// 🌟 استخدام النافذة المخصصة وتفريغ المستشفى 🌟
 window.cancelIncident = function(incId) {
     if(window.openConfirmModal) {
         window.openConfirmModal(
             "إلغاء البلاغ الطارئ", 
-            "هل أنت متأكد من إلغاء هذا البلاغ؟ سيتم فك ارتباط الإسعاف وإعادته للقاعدة، وإلغاء حجز سرير المستشفى.", 
+            "هل أنت متأكد من إلغاء هذا البلاغ؟ سيتم فك ارتباط الإسعاف وإعادته للقاعدة، وإلغاء حجز المستشفى.", 
             async () => executeCancel(incId)
         );
     } else {
-        if(confirm("هل أنت متأكد من إلغاء البلاغ؟ سيتم فك ارتباط الإسعاف.")) executeCancel(incId);
+        if(confirm("هل أنت متأكد من إلغاء البلاغ؟")) executeCancel(incId);
     }
 };
 
@@ -457,14 +650,9 @@ async function executeCancel(incId) {
         inc.status = 'canceled';
         if (inc.assigned_ambulance_id) {
             const ambId = inc.assigned_ambulance_id;
-            if (MapEngine.activeTasks[`ambulances_${ambId}`]) {
-                clearInterval(MapEngine.activeTasks[`ambulances_${ambId}`]);
-                delete MapEngine.activeTasks[`ambulances_${ambId}`];
-            }
             window.rawData.ambulances[ambId].status = 'returning';
-            await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'returning' }).eq('id', ambId);
+            supabase.from(DB_TABLES.AMBULANCES).update({ status: 'returning' }).eq('id', ambId).then();
         }
-        // تحرير المستشفى والإسعاف
         inc.assigned_hospital_id = null;
         inc.assigned_ambulance_id = null;
         MapEngine.toggleIncidentRoute(incId, null, null, null, null, null, null, null, false);
@@ -474,260 +662,13 @@ async function executeCancel(incId) {
         status: 'canceled', assigned_hospital_id: null, assigned_ambulance_id: null 
     }).eq('id', incId);
     
-    await logSystemAction('UPDATE', 'incidents', incId, 'Admin canceled the incident');
+    await logSystemAction('UPDATE', 'incidents', incId, 'Admin canceled the incident manually.');
     
     window.updateAllUI(); 
     document.getElementById('detailsPanel').classList.add(document.documentElement.dir === 'rtl' ? '-translate-x-[120%]' : 'translate-x-[120%]');
 }
 
-window.processSystemQueues = async function() {
-    if (SysSettings.mode !== 'simulation') return;
-
-    let uiNeedsUpdate = false; 
-
-    if (!window.simCacheRestored) {
-        const cache = JSON.parse(localStorage.getItem('resq_sim_positions') || '{}');
-        ['ambulances', 'devices'].forEach(type => {
-            if (window.rawData[type]) {
-                Object.values(window.rawData[type]).forEach(item => {
-                    if (cache[`${type}_${item.id}`]) {
-                        item.lat = cache[`${type}_${item.id}`].lat;
-                        item.lng = cache[`${type}_${item.id}`].lng;
-                        item.currentSpeed = cache[`${type}_${item.id}`].speed || 0;
-                    }
-                });
-            }
-        });
-        window.simCacheRestored = true;
-        uiNeedsUpdate = true;
-    }
-
-    const now = new Date().getTime();
-
-    if (SysSettings.trackCivilians) {
-        const allIncidentsList = Object.values(window.rawData.incidents);
-        const busyStatuses = ['pending', 'assigned', 'in_progress', 'completed'];
-
-        Object.values(window.rawData.devices).forEach(dev => {
-            const strDevId = String(dev.id);
-            const activeInc = allIncidentsList.find(inc => String(inc.device_id) === strDevId && busyStatuses.includes(inc.status));
-
-            if (activeInc) {
-                if (MapEngine.activeTasks[`devices_${dev.id}`]) {
-                    clearInterval(MapEngine.activeTasks[`devices_${dev.id}`]);
-                    delete MapEngine.activeTasks[`devices_${dev.id}`];
-                }
-                if (dev.currentSpeed !== 0) { dev.currentSpeed = 0; uiNeedsUpdate = true; }
-
-                if (activeInc.status === 'pending' && !activeInc._snapped) {
-                    activeInc.latitude = dev.lat;
-                    activeInc.longitude = dev.lng;
-                    activeInc._snapped = true;
-                    
-                    supabase.from(DB_TABLES.INCIDENTS).update({
-                        latitude: dev.lat,
-                        longitude: dev.lng
-                    }).eq('id', activeInc.id);
-                    
-                    uiNeedsUpdate = true;
-                }
-                return; 
-            }
-
-            if (!MapEngine.activeTasks[`devices_${dev.id}`]) {
-                if (Math.random() < 0.10) { 
-                    let startLat = parseFloat(dev.lat) || 30.0444 + (Math.random() - 0.5) * 0.05;
-                    let startLng = parseFloat(dev.lng) || 31.2357 + (Math.random() - 0.5) * 0.05;
-                    let targetLat = startLat + (Math.random() - 0.5) * 0.1;
-                    let targetLng = startLng + (Math.random() - 0.5) * 0.1;
-                    
-                    MapEngine.simulateMovementAlongRoad('devices', String(dev.id), startLat, startLng, targetLat, targetLng, SIM_CONFIG.CAR_SPEED_KPH || 80, (lat, lng, heading, speed) => {
-                        dev.lat = lat; dev.lng = lng; dev.heading = heading; dev.currentSpeed = speed; 
-                        
-                        const nowMs = Date.now();
-                        if (!dev._lastSave || nowMs - dev._lastSave > 1000) {
-                            simCache[`devices_${dev.id}`] = {lat, lng, heading, speed};
-                            localStorage.setItem('resq_sim_positions', JSON.stringify(simCache));
-                            dev._lastSave = nowMs;
-                        }
-                        
-                        window.updateLiveSpeedUI('devices', dev.id, speed); 
-                    }, true); 
-                }
-            }
-        });
-    }
-
-    const pendingIncidents = Object.values(window.rawData.incidents).filter(inc => inc.status === 'pending');
-    for (const inc of pendingIncidents) {
-        let createdAt = new Date(inc.created_at).getTime();
-        if (isNaN(createdAt)) createdAt = now - 11000; 
-        const timeDiff = (now - createdAt) / 1000;
-        
-        if (timeDiff >= 10 || timeDiff < 0) { 
-            const incCoords = getCoords(inc);
-            if (isNaN(incCoords.lat) || isNaN(incCoords.lng)) continue; 
-
-            let nearestAmb = null; let minAmbDist = Infinity;
-            Object.values(window.rawData.ambulances).filter(a => a.status === 'available').forEach(a => {
-                const aCoords = getCoords(a);
-                if (!isNaN(aCoords.lat) && !isNaN(aCoords.lng)) {
-                    const dist = Math.sqrt(Math.pow(aCoords.lat - incCoords.lat, 2) + Math.pow(aCoords.lng - incCoords.lng, 2));
-                    if (dist < minAmbDist) { minAmbDist = dist; nearestAmb = a; }
-                }
-            });
-
-            let nearestHosp = null; let minHospDist = Infinity;
-            const hospArray = Object.values(window.rawData.hospitals);
-            if (hospArray.length > 0) {
-                hospArray.forEach(h => {
-                    const hCoords = getCoords(h);
-                    if (!isNaN(hCoords.lat) && !isNaN(hCoords.lng)) {
-                        const dist = Math.sqrt(Math.pow(hCoords.lat - incCoords.lat, 2) + Math.pow(hCoords.lng - incCoords.lng, 2));
-                        if (dist < minHospDist) { minHospDist = dist; nearestHosp = h; }
-                    }
-                });
-            } else {
-                nearestHosp = { id: null, lat: incCoords.lat + 0.02, lng: incCoords.lng + 0.02, name: "مستشفى طوارئ (افتراضي)" };
-            }
-
-            if (nearestAmb) {
-                if (!nearestAmb.base_lat) { nearestAmb.base_lat = nearestAmb.lat; nearestAmb.base_lng = nearestAmb.lng; }
-
-                window.rawData.incidents[inc.id].status = 'assigned';
-                window.rawData.incidents[inc.id].assigned_ambulance_id = nearestAmb.id;
-                window.rawData.incidents[inc.id].assigned_hospital_id = nearestHosp.id || null;
-                window.rawData.incidents[inc.id].assigned_at = new Date().toISOString();
-                
-                window.rawData.ambulances[nearestAmb.id].status = 'assigned';
-                window.rawData.ambulances[nearestAmb.id].base_lat = nearestAmb.base_lat;
-                window.rawData.ambulances[nearestAmb.id].base_lng = nearestAmb.base_lng;
-                
-                supabase.from(DB_TABLES.AMBULANCES).update({ status: 'assigned', base_lat: nearestAmb.base_lat, base_lng: nearestAmb.base_lng }).eq('id', nearestAmb.id);
-                supabase.from(DB_TABLES.INCIDENTS).update({ 
-                    status: 'assigned', 
-                    assigned_ambulance_id: nearestAmb.id, 
-                    assigned_hospital_id: nearestHosp.id || null, 
-                    assigned_at: new Date().toISOString() 
-                }).eq('id', inc.id);
-                
-                uiNeedsUpdate = true;
-            }
-        }
-    }
-
-    const activeIncidents = Object.values(window.rawData.incidents).filter(inc => inc.status !== 'completed' && inc.status !== 'canceled');
-
-Object.values(window.rawData.ambulances).forEach(amb => {
-        const assignedInc = activeIncidents.find(inc => inc.assigned_ambulance_id === amb.id);
-
-        if (assignedInc && !MapEngine.activeTasks[`ambulances_${amb.id}`]) {
-            let targetLat, targetLng;
-            const incCoords = getCoords(assignedInc);
-            const ambCoords = getCoords(amb);
-            const distToInc = Math.sqrt(Math.pow(ambCoords.lat - incCoords.lat, 2) + Math.pow(ambCoords.lng - incCoords.lng, 2));
-
-            if (amb.status === 'assigned') {
-                if (distToInc <= 0.005) {
-                    window.rawData.incidents[assignedInc.id].status = 'in_progress';
-                    window.rawData.ambulances[amb.id].status = 'in_progress';
-                    supabase.from(DB_TABLES.INCIDENTS).update({ status: 'in_progress' }).eq('id', assignedInc.id);
-                    supabase.from(DB_TABLES.AMBULANCES).update({ status: 'in_progress' }).eq('id', amb.id);
-                    MapEngine.toggleIncidentRoute(assignedInc.id, null, null, null, null, null, null, null, false);
-                    uiNeedsUpdate = true; return; 
-                }
-                targetLat = incCoords.lat; targetLng = incCoords.lng;
-            } 
-            else if (amb.status === 'in_progress') {
-                let targetHosp = window.rawData.hospitals[assignedInc.assigned_hospital_id];
-                if (!targetHosp) targetHosp = { lat: incCoords.lat + 0.02, lng: incCoords.lng + 0.02 }; 
-                
-                const hCoords = getCoords(targetHosp);
-                const distToHosp = Math.sqrt(Math.pow(ambCoords.lat - hCoords.lat, 2) + Math.pow(ambCoords.lng - hCoords.lng, 2));
-                
-                if (distToHosp <= 0.005) {
-                    window.rawData.incidents[assignedInc.id].status = 'completed';
-                    window.rawData.ambulances[amb.id].status = 'returning';
-                    supabase.from(DB_TABLES.INCIDENTS).update({ status: 'completed', resolved_at: new Date().toISOString() }).eq('id', assignedInc.id);
-                    supabase.from(DB_TABLES.AMBULANCES).update({ status: 'returning' }).eq('id', amb.id);
-                    uiNeedsUpdate = true; return;
-                }
-                targetLat = hCoords.lat; targetLng = hCoords.lng;
-            }
-
-            if (targetLat && targetLng && !isNaN(targetLat) && !isNaN(targetLng)) {
-                MapEngine.simulateMovementAlongRoad('ambulances', String(amb.id), amb.lat, amb.lng, targetLat, targetLng, SIM_CONFIG.AMBULANCE_SPEED_KPH * 1.5, (lat, lng, heading, speed) => {
-                    amb.lat = lat; amb.lng = lng; amb.heading = heading; amb.currentSpeed = speed; 
-                    
-                    const nowMs = Date.now();
-                    if (!amb._lastSave || nowMs - amb._lastSave > 1000) {
-                        simCache[`ambulances_${amb.id}`] = {lat, lng, heading, speed};
-                        localStorage.setItem('resq_sim_positions', JSON.stringify(simCache));
-                        amb._lastSave = nowMs;
-                    }
-                    
-                    window.updateLiveSpeedUI('ambulances', amb.id, speed); 
-                }, true); 
-            }
-        } 
-        else if (amb.status === 'returning' && !MapEngine.activeTasks[`ambulances_${amb.id}`]) {
-            const baseLat = parseFloat(amb.base_lat) || 30.0444; const baseLng = parseFloat(amb.base_lng) || 31.2357;
-            const ambCoords = getCoords(amb);
-            const distToBase = Math.sqrt(Math.pow(ambCoords.lat - baseLat, 2) + Math.pow(ambCoords.lng - baseLng, 2));
-            
-            if (distToBase <= 0.005) {
-                window.rawData.ambulances[amb.id].status = 'available';
-                supabase.from(DB_TABLES.AMBULANCES).update({ status: 'available' }).eq('id', amb.id);
-                uiNeedsUpdate = true; return;
-            }
-
-            MapEngine.simulateMovementAlongRoad('ambulances', String(amb.id), amb.lat, amb.lng, baseLat, baseLng, SIM_CONFIG.AMBULANCE_SPEED_KPH, (lat, lng, heading, speed) => {
-                amb.lat = lat; amb.lng = lng; amb.heading = heading; amb.currentSpeed = speed; 
-                
-                const nowMs = Date.now();
-                if (!amb._lastSave || nowMs - amb._lastSave > 1000) {
-                    simCache[`ambulances_${amb.id}`] = {lat, lng, heading, speed};
-                    localStorage.setItem('resq_sim_positions', JSON.stringify(simCache));
-                    amb._lastSave = nowMs;
-                }
-
-                window.updateLiveSpeedUI('ambulances', amb.id, speed);
-            }, true); 
-        }
-        // 🌟 الميزة الجديدة: نظام الدوريات الاستطلاعية للإسعافات المتاحة 🌟
-        else if (amb.status === 'available' && !MapEngine.activeTasks[`ambulances_${amb.id}`]) {
-            // إعطاء فرصة 15% فقط لبدء مشوار جديد في كل دورة (لمنع الضغط على السيرفر ولتأخذ السيارات فترة توقف منطقية)
-            if (Math.random() < 0.15) { 
-                const baseLat = parseFloat(amb.base_lat) || parseFloat(amb.lat) || 30.0444; 
-                const baseLng = parseFloat(amb.base_lng) || parseFloat(amb.lng) || 31.2357;
-                const patrolRadius = SIM_CONFIG.PATROL_RADIUS || 0.03;
-                
-                // اختيار نقطة عشوائية حول القاعدة
-                let targetLat = baseLat + (Math.random() - 0.5) * patrolRadius * 2;
-                let targetLng = baseLng + (Math.random() - 0.5) * patrolRadius * 2;
-                
-                // سرعة الدورية أبطأ من الطوارئ (تساوي 50% من السرعة العادية)
-                const patrolSpeed = (SIM_CONFIG.AMBULANCE_SPEED_KPH || 120) * 0.5;
-
-                MapEngine.simulateMovementAlongRoad('ambulances', String(amb.id), amb.lat, amb.lng, targetLat, targetLng, patrolSpeed, (lat, lng, heading, speed) => {
-                    amb.lat = lat; amb.lng = lng; amb.heading = heading; amb.currentSpeed = speed; 
-                    
-                    const nowMs = Date.now();
-                    if (!amb._lastSave || nowMs - amb._lastSave > 1000) {
-                        simCache[`ambulances_${amb.id}`] = {lat, lng, heading, speed};
-                        localStorage.setItem('resq_sim_positions', JSON.stringify(simCache));
-                        amb._lastSave = nowMs;
-                    }
-
-                    window.updateLiveSpeedUI('ambulances', amb.id, speed);
-                }, true); // المشي على شوارع حقيقية فقط
-            }
-        }
-    });
-
-    if (uiNeedsUpdate) window.updateAllUI();
-};
-
+// ⏱️ مؤقت العد التنازلي البصري للحوادث
 setInterval(() => {
     document.querySelectorAll('.incident-timer').forEach(timer => {
         const status = timer.getAttribute('data-status');

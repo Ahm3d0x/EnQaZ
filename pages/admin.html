@@ -13,8 +13,32 @@
     </script>
     <style>
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        .leaflet-incident-marker { animation: pulse-red 2s infinite; border-radius: 50%; border: 3px solid #dc2626; background: rgba(220, 38, 38, 0.4); box-shadow: 0 0 15px #dc2626; }
+        .leaflet-incident-marker { animation: pulse-red 1s infinite; border-radius: 50%; border: 3px solid #dc2626; background: rgba(220, 38, 38, 0.4); box-shadow: 0 0 15px #dc2626; }
         @keyframes pulse-red { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+        .leaflet-marker-icon {
+    transition: transform 1s linear !important;
+}
+/* الحركة السلسة الافتراضية عند تحديث البيانات */
+.leaflet-marker-icon, .smooth-marker {
+    transition: transform 1s linear !important;
+}
+
+/* إيقاف النعومة فوراً أثناء الزووم أو سحب الخريطة بالماوس لمنع التقطيع */
+.leaflet-container.is-interacting .leaflet-marker-icon,
+.leaflet-container.is-interacting .smooth-marker {
+    transition: none !important;
+    
+}
+
+/* تأثير النبض للحوادث */
+.leaflet-incident-marker { 
+    animation: pulse-red 1s infinite; 
+    border-radius: 50%; 
+    border: 3px solid #dc2626; 
+    background: rgba(220, 38, 38, 0.4); 
+    box-shadow: 0 0 15px #dc2626; 
+}
+@keyframes pulse-red { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
     </style>
 </head>
 
