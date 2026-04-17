@@ -20,12 +20,8 @@ export const EngineSecurity = {
     async init() {
         this.cacheDOM();
 
-        // MULTI-TAB PREVENTION: Self-destruct if session overlaps
-        window.addEventListener('storage', (e) => {
-            if (e.key === "ENGINE_SESSION") {
-                this.blockMultiTab();
-            }
-        });
+        // MULTI-TAB PREVENTION: Removed auto-kill to allow smooth conflict resolution.
+        // Session lock is strictly managed defensively via the RPC responses.
 
         try {
             this.updateStatus("Authenticating Authority...");
@@ -50,8 +46,8 @@ export const EngineSecurity = {
         }
         if (this.els.btnExit) {
             this.els.btnExit.addEventListener('click', () => {
-                localStorage.removeItem("ENGINE_SESSION");
-                window.location.replace('../index.html');
+                sessionStorage.removeItem("ENGINE_SESSION");
+                window.location.reload();
             });
         }
     },
@@ -62,74 +58,51 @@ export const EngineSecurity = {
     },
 
     async verifyAuthentication() {
-        const sessionKey = localStorage.getItem("ENGINE_SESSION");
+        const sessionKey = sessionStorage.getItem("ENGINE_SESSION");
         if (!sessionKey || sessionKey.trim() === '') {
-            window.location.replace('engine-login.html');
-            throw new Error('Valid Engine Key Missing.');
+            throw new Error('Valid Engine Key Missing. Please log in.');
         }
 
         this.sessionId = sessionKey;
     },
 
     async handleSessionLock() {
-        // GLOBAL SESSION LOCK LOGIC
-        const { data: activeSessions, error } = await supabase
-            .from(DB_TABLES.ENGINE_SESSIONS)
-            .select('*')
-            .eq('is_active', true)
-            .limit(1);
+        // 🔒 ATOMIC SESSION CREATION VIA SUPABASE RPC
+        // Bypasses all client-side race conditions using pg_advisory_xact_lock on the server
+        const { data, error } = await supabase.rpc('rpc_acquire_engine_lock', {
+            p_session_id: this.sessionId
+        });
 
         if (error) {
-            throw new Error("Unable to read session states. Database offline?");
+            console.error("[session_error] Lock acquisition failed:", error);
+            throw new Error("Database RPC failure. Unable to acquire authoritative lock.");
         }
 
-        if (activeSessions && activeSessions.length > 0) {
-            const activeSession = activeSessions[0];
-            
-            // Check DEAD SESSION CLEANUP (10 seconds timeout)
-            const now = Date.now();
-            const tz = new Date(activeSession.last_ping).getTime();
-            if ((now - tz) > 10000) {
-                // Dead - Auto-release and take over silently
-                console.log("[session_expired] Old session purged silently.");
-                await supabase.from(DB_TABLES.ENGINE_SESSIONS).update({ is_active: false }).eq('id', activeSession.id);
-                await this.registerNewSession();
-                return;
-            }
-
-            if (activeSession.session_id === this.sessionId) {
-                // ALLOW 
-                this.grantAccess();
-            } else {
-                // BLOCK ENGINE COMPLETELY 
-                this.showConflictResolution();
-                console.log("[session_blocked] Execution halted. Another origin running.");
-            }
-        } else {
-            // No sessions running - allow!
-            await this.registerNewSession();
-        }
-    },
-
-    async registerNewSession() {
-        try {
-            await supabase.from(DB_TABLES.ENGINE_SESSIONS).insert([{
-                session_id: this.sessionId,
-                is_active: true,
-                last_ping: new Date().toISOString()
-            }]);
-
+        if (data && data.status === 'granted') {
+            console.log("[session_created] Global Network Lock Acquired deterministically.");
             this.grantAccess();
-        } catch (e) {
-            throw new Error(`DB Rejection. Run the SQL fix for user_id! Err: ${e.message}`);
+        } else if (data && data.status === 'blocked') {
+            console.log(`[session_blocked] Execution halted. Another origin running. Active session: ${data.active_session}`);
+            this.showConflictResolution();
+        } else {
+            console.warn("[session_anomaly] Unexpected RPC response:", data);
+            setTimeout(() => this.handleSessionLock(), 1000);
         }
     },
+
+
 
     showConflictResolution() {
-        this.updateStatus("Access Control: ⚠️ Engine globally locked by another active session.");
+        this.updateStatus("هناك session نشطة بالفعل");
         
-        if (this.els.btnTakeover) this.els.btnTakeover.classList.remove('hidden');
-        if (this.els.btnExit) this.els.btnExit.classList.remove('hidden');
+        if (this.els.btnTakeover) {
+            this.els.btnTakeover.innerHTML = '<i class="fa-solid fa-bolt"></i> Take Over';
+            this.els.btnTakeover.classList.remove('hidden');
+        }
+        if (this.els.btnExit) {
+            this.els.btnExit.innerHTML = '<i class="fa-solid fa-person-walking-arrow-right"></i> Exit';
+            this.els.btnExit.classList.remove('hidden');
+        }
     },
 
     async executeTakeover() {
@@ -137,18 +110,26 @@ export const EngineSecurity = {
         if (this.els.btnTakeover) this.els.btnTakeover.classList.add('hidden');
         if (this.els.btnExit) this.els.btnExit.classList.add('hidden');
 
-        // STEP 1: Deactivate DB active sessions
-        await supabase.from(DB_TABLES.ENGINE_SESSIONS).update({ is_active: false }).eq('is_active', true);
-        
-        // STEP 2: Generate brand new local session footprint to break cache bounds
+        // STEP 1: Generate brand new local session footprint to break cache bounds
         this.sessionId = crypto.randomUUID();
-        localStorage.setItem("ENGINE_SESSION", this.sessionId);
+        sessionStorage.setItem("ENGINE_SESSION", this.sessionId);
+
+        // STEP 2: Deactivate globally and force acquire lock via strictly atomic RPC
+        const { data, error } = await supabase.rpc('rpc_takeover_engine_session', {
+            p_session_id: this.sessionId
+        });
+
+        if (error || (data && data.status !== 'success')) {
+            console.error("Takeover failed:", error || data);
+            this.lockdown("Takeover sequence failed on DB layer.");
+            return;
+        }
 
         console.log("[session_taken_over] Network overridden.");
 
         setTimeout(async () => {
-             await this.registerNewSession();
-        }, 800);
+             await this.handleSessionLock();
+        }, 500);
     },
 
     grantAccess() {
@@ -194,15 +175,23 @@ export const EngineSecurity = {
     },
 
     startHeartbeat() {
-        // Ping every 5 seconds
+        // Ping every 5 seconds natively enforced via RPC
         this.heartbeatLoop = setInterval(async () => {
             if (!window.isSessionValid) return;
-            const { error } = await supabase.from(DB_TABLES.ENGINE_SESSIONS)
-                .update({ last_ping: new Date().toISOString() })
-                .eq('session_id', this.sessionId)
-                .eq('is_active', true);
+            
+            const { data, error } = await supabase.rpc('rpc_heartbeat_engine', {
+                p_session_id: this.sessionId
+            });
 
-            if (error) console.error("Heartbeat sync failed.");
+            if (error) {
+                console.error("Heartbeat sync failed. RPC error:", error);
+                return;
+            }
+
+            if (data && data.status === 'revoked') {
+                 console.warn("Heartbeat rejected! Session was revoked externally.");
+                 this.enforceKillSwitch("SESSION REVOKED INTERNALLY");
+            }
         }, 5000);
     },
 
@@ -234,12 +223,11 @@ export const EngineSecurity = {
     setupUnloadTrap() {
         window.addEventListener('beforeunload', () => {
             if (window.isSessionValid) {
-                supabase.from(DB_TABLES.ENGINE_SESSIONS).update({ is_active: false }).eq('session_id', this.sessionId).then();
+                supabase.rpc('rpc_deactivate_engine_session', { p_session_id: this.sessionId }).then();
             }
         });
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    EngineSecurity.init();
-});
+// Wait for frontend engine.html to explicitly invoke EngineSecurity.init() after successful login.
+// Removed auto initialization.

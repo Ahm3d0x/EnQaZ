@@ -98,3 +98,40 @@ export function subscribeToTable(tableName, callback) {
         });
     return channel; // لإمكانية إغلاق الاتصال لاحقاً لو احتجنا
 }
+
+/**
+ * 🔒 المركز الآمن لتسجيل حركات الحوادث (Idempotent Logger)
+ * يضمن عدم تكرار أي سجل بفضل دمج قاعدة بيانات Unique Index
+ */
+export async function logIncidentAction(incidentId, action, performedBy = 'system', note = '', metadata = {}) {
+    if (!incidentId || !action) return false;
+
+    // Optional fast-check if high traffic
+    const { data: existing } = await supabase.from(DB_TABLES.INCIDENT_LOGS)
+        .select('id').eq('incident_id', incidentId).eq('action', action).limit(1);
+
+    if (existing && existing.length > 0) {
+        console.log(`[Idempotency] Blocked duplicate event: ${action} for INC#${incidentId}`);
+        return false;
+    }
+
+    const { error } = await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
+        incident_id: incidentId,
+        action,
+        performed_by: performedBy,
+        note,
+        metadata
+    }]);
+
+    // 23505 is Unique Violation in PostgreSQL (Constraint Trap)
+    if (error) {
+        if (error.code === '23505') {
+            console.log(`[Idempotency] Native DB Constraint Blocked duplicate: ${action} for INC#${incidentId}`);
+            return false;
+        } else {
+            console.error(`[LogError] Failed to write event ${action}`, error.message);
+            return false;
+        }
+    }
+    return true;
+}

@@ -2,7 +2,7 @@
 // 🧠 EnQaZ Core Engine - Elite AI Dispatcher & Rerouting System (V5.0)
 // ============================================================================
 
-import { supabase, DB_TABLES } from '../config/supabase.js';
+import { supabase, DB_TABLES, logIncidentAction } from '../config/supabase.js';
 import { EngineUI } from './engineui.js';
 
 export const EngineDispatch = {
@@ -127,12 +127,7 @@ export const EngineDispatch = {
             updated_at: timestamp
         }).eq('id', incidentId);
 
-        await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
-            incident_id: incidentId,
-            action: 'assigned',
-            performed_by: 'AI_ENGINE',
-            note: `Unit ${ambulance.code} dispatched. Target: ${hospital.name}`
-        }]);
+        await logIncidentAction(incidentId, 'assigned', 'AI_ENGINE', `Unit ${ambulance.code} dispatched. Target: ${hospital.name}`);
 
         EngineUI.log('DISPATCH', `Unit ${ambulance.code} locked for Incident #${incidentId}. 15s timer started.`, 'info');
         EngineUI.pushTimeline(`Dispatched ${ambulance.code}`, `Mission #${incidentId} assigned.`, 'dispatch');
@@ -161,12 +156,7 @@ export const EngineDispatch = {
                 EngineUI.pushTimeline(`Driver Timeout`, `Unit missed 15s window. Reassigning.`, 'alert');
                 EngineUI.triggerGlobalAlert('driver_timeout');
                 
-                await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
-                    incident_id: incidentId,
-                    action: 'driver_timeout',
-                    performed_by: 'system',
-                    note: `Ambulance ignored dispatch. Searching next candidate.`
-                }]);
+                await logIncidentAction(incidentId, 'driver_timeout', 'system', `Ambulance ignored dispatch. Searching next candidate.`);
 
                 // Free the failed ambulance (must become available again)
                 await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'available' }).eq('id', ambulanceId);
@@ -198,12 +188,7 @@ export const EngineDispatch = {
         const backoffMultiplier = Math.pow(2, state.retries - 1);
         const delayMs = 5000 * backoffMultiplier;
 
-        await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
-            incident_id: incidentId,
-            action: 'reassigned',
-            performed_by: 'system',
-            note: `Attempting reassignment with Candidate ${state.currentIdx % state.candidates.length === 0 ? 'A' : 'B'}.`
-        }]);
+        await logIncidentAction(incidentId, 'reassigned', 'system', `Attempting reassignment with Candidate ${state.currentIdx % state.candidates.length === 0 ? 'A' : 'B'}.`);
 
         EngineUI.log('DISPATCH', `Failover triggered. Attempting next candidate in ${delayMs/1000}s... (Retry ${state.retries}/${maxR})`, 'warn');
         

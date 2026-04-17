@@ -2,7 +2,7 @@
 // 🏎️ EnQaZ Core Engine - High-Performance Simulator (V4.0)
 // ============================================================================
 
-import { supabase, DB_TABLES } from '../config/supabase.js';
+import { supabase, DB_TABLES, logIncidentAction } from '../config/supabase.js';
 import { EngineUI } from './engineui.js';
 
 export const trackingChannel = supabase.channel('live-tracking', {
@@ -210,7 +210,7 @@ export const EngineSimulator = {
                     const ambId = newInc.assigned_ambulance_id;
                     const mission = this.activeMissions.get(ambId);
                     if (mission) {
-                        await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{ incident_id: newInc.id, action: 'pickup', performed_by: 'system', note: 'Patient pickup confirmed.' }]);
+                        await logIncidentAction(newInc.id, 'pickup', 'system', 'Patient pickup confirmed.');
                         await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'en_route_hospital' }).eq('id', ambId);
                     }
                 }
@@ -220,15 +220,7 @@ export const EngineSimulator = {
                     const ambId = newInc.assigned_ambulance_id;
                     const mission = this.activeMissions.get(ambId);
                     
-                    if (newInc.assigned_hospital_id) {
-                        // Find an available bed and occupy it
-                        const { data: beds } = await supabase.from('hospital_beds').select('*').eq('hospital_id', newInc.assigned_hospital_id).eq('status', 'available').limit(1);
-                        if (beds && beds.length > 0) {
-                            await supabase.from('hospital_beds').update({ status: 'occupied', incident_id: newInc.id }).eq('id', beds[0].id);
-                        }
-                    }
-
-                    await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{ incident_id: newInc.id, action: 'hospital_confirmed', performed_by: 'hospital', note: 'Patient handover completed.' }]);
+                    await logIncidentAction(newInc.id, 'hospital_confirmed', 'hospital', 'Patient handover completed.');
                     await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'available' }).eq('id', ambId);
 
                     if (mission) {
@@ -544,12 +536,12 @@ export const EngineSimulator = {
         } 
         else if (mission.stage === 'to_incident') {
             mission.stage = 'waiting_pickup';
-            await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{ incident_id: mission.incId, action: 'arrived', performed_by: 'system', note: 'Ambulance arrived at incident location.' }]);
+            await logIncidentAction(mission.incId, 'arrived', 'system', 'Ambulance arrived at incident location.');
             await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'arrived', lat: mission.lat, lng: mission.lng }).eq('id', ambId);
         } 
         else if (mission.stage === 'to_hospital') {
             mission.stage = 'waiting_hospital_action';
-            await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{ incident_id: mission.incId, action: 'arrived_hospital', performed_by: 'system', note: 'Ambulance arrived at hospital.' }]);
+            await logIncidentAction(mission.incId, 'arrived_hospital', 'system', 'Ambulance arrived at hospital.');
             await supabase.from(DB_TABLES.AMBULANCES).update({ status: 'busy', lat: mission.lat, lng: mission.lng }).eq('id', ambId);
         }
     },

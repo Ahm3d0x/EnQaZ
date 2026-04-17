@@ -342,15 +342,16 @@ create table public.visitor_searches (
 
 ----------------------------------------
 
-
 create table public.engine_sessions (
   id uuid not null default extensions.uuid_generate_v4 (),
-  user_id uuid not null,
+  user_id uuid null,
   session_id uuid not null,
   started_at timestamp with time zone null default now(),
   last_ping timestamp with time zone null default now(),
   is_active boolean null default true,
-  constraint engine_sessions_pkey primary key (id),
-  constraint engine_sessions_user_id_fkey foreign KEY (user_id) references auth.users (id)
+  constraint engine_sessions_pkey primary key (id)
 ) TABLESPACE pg_default;
 
+create unique INDEX IF not exists one_active_engine_session on public.engine_sessions using btree (is_active) TABLESPACE pg_default
+where
+  (is_active = true);

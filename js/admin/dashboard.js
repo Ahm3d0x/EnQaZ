@@ -2,7 +2,7 @@
 // 🎛️ EnQaZ Dashboard Controller (Luxury View & Telemetry Receiver) - V4.0
 // ============================================================================
 
-import { supabase, DB_TABLES } from '../config/supabase.js';
+import { supabase, DB_TABLES, logIncidentAction } from '../config/supabase.js';
 import { MapEngine, SIM_CONFIG } from './mapEngine.js';
     const SMOOTHING_FACTOR = 0.001; // نعومة فائقة للحركة
 
@@ -86,13 +86,18 @@ function startSmoothCameraLoop() {
 async function logSystemAction(action, targetTable, targetId, note) {
     if (!currentAdminId) return;
     try {
-        const safeTargetId = isNaN(targetId) || targetId === 'GLOBAL' ? 0 : parseInt(targetId);
-        await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
-            incident_id: targetTable === 'incidents' ? safeTargetId : null,
-            action: action,
-            performed_by: `Admin ID: ${currentAdminId}`,
-            note: note
-        }]);
+        const safeTargetId = isNaN(targetId) || targetId === 'GLOBAL' ? null : parseInt(targetId);
+        if (targetTable === 'incidents' && safeTargetId) {
+            await logIncidentAction(safeTargetId, action, `Admin ID: ${currentAdminId}`, note);
+        } else {
+            // Non-incident logs can remain raw inserts
+            await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
+                incident_id: null,
+                action: action,
+                performed_by: `Admin ID: ${currentAdminId}`,
+                note: note
+            }]);
+        }
     } catch (error) { console.error("Audit Log Failed:", error); }
 }
 

@@ -2,7 +2,7 @@
 // 📡 EnQaZ Core Engine - Hardware Incident Log & Watchdog
 // ============================================================================
 
-import { supabase, DB_TABLES } from '../config/supabase.js';
+import { supabase, DB_TABLES, logIncidentAction } from '../config/supabase.js';
 import { EngineUI } from './engineui.js';
 
 export const IncidentLog = {
@@ -108,12 +108,7 @@ export const IncidentLog = {
 
             await supabase.from(DB_TABLES.HARDWARE_REQUESTS).update({ incident_id: newInc.id }).eq('id', item.reqId);
             
-            await supabase.from(DB_TABLES.INCIDENT_LOGS).insert([{
-                incident_id: newInc.id,
-                action: 'incident_created',
-                performed_by: 'system',
-                note: 'Incident automatically confirmed after 10s watchdog timeout.'
-            }]);
+            await logIncidentAction(newInc.id, 'incident_created', 'system', 'Incident automatically confirmed after 10s watchdog timeout.');
 
             EngineUI.log('DB', `Incident #${newInc.id} confirmed. Triggering Dispatcher...`, 'success');
             EngineUI.triggerGlobalAlert('new_incident');

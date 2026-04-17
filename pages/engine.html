@@ -51,6 +51,35 @@
 </head>
 <body id="engine-body" class="h-screen w-screen font-mono text-[10px] sm:text-xs flex flex-col relative crt-effect">
 
+    <!-- LOGIN OVERLAY LAYER (NEW) -->
+    <div id="engine-login-layer" class="fixed inset-0 z-[99999] bg-black flex flex-col justify-center items-center backdrop-blur-md transition-all duration-500">
+        <div class="z-10 w-full max-w-lg bg-black border border-term-dim/30 rounded-lg p-8 shadow-[0_0_30px_rgba(0,143,17,0.2)] relative">
+            <div class="absolute inset-0 z-[-1] pointer-events-none crt-effect"></div>
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-microchip text-4xl mb-4 animate-pulse text-term-dim"></i>
+                <h1 class="text-2xl font-bold uppercase tracking-widest text-term-text pb-2">EnQaZ Core Engine</h1>
+                <p class="text-term-dim text-[10px] uppercase">Secure Access Terminal</p>
+            </div>
+
+            <div id="auth-alert" class="hidden mb-4 p-2 border border-term-alert bg-term-alert/10 text-term-alert text-center font-bold uppercase alert-flash-red">
+                ACCESS DENIED
+            </div>
+
+            <form id="engine-login-form" class="space-y-6 text-center z-10 relative">
+                <div>
+                    <label class="block text-[10px] font-bold text-term-dim uppercase mb-2">Initialize Override Key</label>
+                    <input type="password" id="engine-key-input" required autofocus autocomplete="off"
+                        class="w-full bg-term-bg/50 border border-term-dim/50 rounded p-3 text-center text-term-text focus:outline-none focus:border-term-text focus:shadow-[0_0_10px_rgba(0,255,65,0.2)] transition" 
+                        placeholder="[ ENTRY COMMAND ]">
+                </div>
+
+                <button type="submit" id="btn-submit" class="w-full border-2 border-term-text text-term-text hover:bg-term-text hover:text-black font-bold uppercase py-3 rounded transition-all duration-300">
+                    Execute Boot Sequence <i class="fa-solid fa-terminal ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- SECURITY LOCK OVERLAY -->
     <div id="engine-ui-security-layer" class="fixed inset-0 z-[9999] bg-black bg-opacity-95 backdrop-blur-md flex flex-col justify-center items-center text-term-text transition-all duration-500">
         <i class="fa-solid fa-shield-halved text-6xl mb-4 animate-pulse text-term-dim"></i>
@@ -263,10 +292,115 @@
     
     <script type="module">
         import { EngineUI } from '../js/engine/engineui.js';
+        import { EngineSecurity } from '../js/engine/enginesecurity.js';
         
-        // Wait for Security Clearance!
+        const ENGINE_SECRET_KEY = "0xENQAZ_CORE";
+
+        // --- MULTI-TAB PREVENTION STRICT LOCK ---
+        let isPrimaryTab = true;
+        let isBlocked = false;
+
+        const loginLayer = document.getElementById('engine-login-layer');
+        const loginForm = document.getElementById('engine-login-form');
+        const keyInput = document.getElementById('engine-key-input');
+        const alertBox = document.getElementById('auth-alert');
+        const btnSubmit = document.getElementById('btn-submit');
+        const securityLayer = document.getElementById('engine-ui-security-layer');
+
+        function blockTab() {
+            if (isBlocked) return;
+            isBlocked = true;
+            isPrimaryTab = false;
+            
+            if(loginLayer) loginLayer.style.display = 'none';
+            if(securityLayer) securityLayer.style.display = 'none';
+            
+            document.body.innerHTML = `
+                <div class="fixed inset-0 z-[999999] bg-black flex flex-col justify-center items-center">
+                    <i class="fa-solid fa-triangle-exclamation text-8xl text-term-warn mb-6 animate-pulse"></i>
+                    <h1 class="text-4xl font-bold text-term-warn tracking-widest uppercase mb-4 text-center">Access Blocked</h1>
+                    <p class="text-gray-400 text-lg uppercase tracking-wide">Engine already running on this device.</p>
+                </div>
+            `;
+        }
+
+        if (window.BroadcastChannel) {
+            const channel = new BroadcastChannel('engine_lock');
+            channel.postMessage({ type: 'CHECK_ACTIVE_TAB' });
+
+            channel.onmessage = (msg) => {
+                if (msg.data.type === 'ACTIVE_TAB_EXISTS') {
+                    blockTab();
+                }
+                if (msg.data.type === 'CHECK_ACTIVE_TAB') {
+                    if (isPrimaryTab && !isBlocked) {
+                        channel.postMessage({ type: 'ACTIVE_TAB_EXISTS' });
+                    }
+                }
+            };
+            
+            window.addEventListener('beforeunload', () => {
+                if (isPrimaryTab && !isBlocked) {
+                    channel.postMessage({ type: 'TAB_CLOSED' });
+                }
+            });
+        } else {
+            // Failsafe: Tab Duplication check
+            if (window.name !== 'EnginePrimary' && sessionStorage.getItem('EnginePrimary_Fallback')) {
+                 blockTab();
+            } else {
+                 window.name = 'EnginePrimary';
+                 sessionStorage.setItem('EnginePrimary_Fallback', 'true');
+            }
+        }
+
+        // --- AUTHENTICATION & LOGIN LOGIC ---
+        // FORCE login every time: Purge any stored sessions
+        localStorage.removeItem("ENGINE_SESSION");
+        sessionStorage.removeItem("ENGINE_SESSION");
+
+        // Always start with login layer visible unless blocked
+        if (!isBlocked) {
+            if(loginLayer) loginLayer.style.display = 'flex';
+            if(securityLayer) securityLayer.style.display = 'none';
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!isPrimaryTab) return;
+                
+                btnSubmit.innerText = "VERIFYING...";
+                alertBox.classList.add('hidden');
+
+                setTimeout(() => {
+                    const val = keyInput.value.trim();
+                    if (val === ENGINE_SECRET_KEY) {
+                        const newSessionId = crypto.randomUUID();
+                        sessionStorage.setItem("ENGINE_SESSION", newSessionId);
+                        
+                        btnSubmit.innerText = "ACCESS GRANTED";
+                        btnSubmit.classList.add('border-term-dim', 'text-term-dim');
+                        btnSubmit.classList.remove('border-term-text', 'text-term-text');
+                        
+                        setTimeout(() => {
+                            if(loginLayer) loginLayer.style.display = 'none';
+                            if(securityLayer) securityLayer.style.display = 'flex';
+                            EngineSecurity.init();
+                        }, 500);
+                    } else {
+                        btnSubmit.innerText = "Execute Boot Sequence";
+                        alertBox.innerText = "ACCESS DENIED";
+                        alertBox.classList.remove('hidden');
+                        keyInput.value = '';
+                    }
+                }, 600);
+            });
+        }
+
+        // Wait for Security Clearance! (No Auto-Run without it)
         window.addEventListener('engine:security_cleared', () => {
-            if (!window.isSessionValid) return;
+            if (!window.isSessionValid || !isPrimaryTab) return;
             EngineUI.init();
         });
     </script>
