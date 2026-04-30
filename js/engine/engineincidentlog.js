@@ -241,11 +241,12 @@ export const IncidentLog = {
     async sendEmergencyAlerts(incidentId, hospitalName, hospLat, hospLng) {
         try {
             // 1. Fetch Incident and Device Data
-            const { data: incident } = await supabase.from('incidents')
-                .select('lat, longitude, latitude, longitude, devices(application_id, users(name))')
+            const { data: incident, error: incErr } = await supabase.from('incidents')
+                .select('*, devices(*)')
                 .eq('id', incidentId)
                 .single();
                 
+            if (incErr) console.error("Error fetching incident:", incErr);
             if (!incident || !incident.devices || !incident.devices.application_id) return;
 
             const lat = parseFloat(incident.lat || incident.latitude);
@@ -253,11 +254,12 @@ export const IncidentLog = {
             const app_id = incident.devices.application_id;
 
             // 2. Fetch Application for emergency contacts
-            const { data: app } = await supabase.from('device_applications')
-                .select('emergency1_name, emergency1_email, emergency2_name, emergency2_email, email, car_plate, car_model, car_brand')
+            const { data: app, error: appErr } = await supabase.from('device_applications')
+                .select('*')
                 .eq('id', app_id)
                 .single();
 
+            if (appErr) console.error("Error fetching application:", appErr);
             if (!app) return;
 
             // 3. Prepare the dynamic HTML message
@@ -292,12 +294,12 @@ export const IncidentLog = {
             <body>
                 <div class="container">
                     <div class="header">
-                        <img src="https://i.ibb.co/3W6nQ8k/logo.png" alt="EnQaZ Logo">
+                        <img src="https://raw.githubusercontent.com/Ahm3d0x/EnQaZ/main/assets/images/logoD.png" alt="EnQaZ Logo">
                         <h1>🚨 إنذار طوارئ عاجل 🚨</h1>
                     </div>
                     
                     <div class="content">
-                        <p>عزيزي المشترك،<br>تم رصد <span class="highlight">حادث اصطدام</span> لمركبة مسجلة في نظام إنقاذ باسم: <strong>${incident.devices.users?.name || 'مجهول'}</strong>.</p>
+                        <p>عزيزي المشترك،<br>تم رصد <span class="highlight">حادث اصطدام</span> لمركبة مسجلة في نظام إنقاذ باسم: <strong>${app.full_name || 'مجهول'}</strong>.</p>
                         
                         <div class="card">
                             <div class="card-item"><strong>رقم الحادث:</strong> #${incidentId}</div>
@@ -335,7 +337,7 @@ export const IncidentLog = {
             
             // Fallback to user email if no emergency emails are provided
             if (contacts.length === 0 && app.email) {
-                contacts.push({ name: incident.devices.users?.name || 'مستخدم النظام', email: app.email });
+                contacts.push({ name: app.full_name || 'مستخدم النظام', email: app.email });
             }
 
             for (const contact of contacts) {

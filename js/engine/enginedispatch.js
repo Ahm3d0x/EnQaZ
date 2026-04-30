@@ -13,6 +13,17 @@ export const EngineDispatch = {
         EngineUI.log('SYS', 'Elite Dispatch Engine V6.0 Online.', 'success');
         this.listenForIncidentReady();
         this.setupDatabaseListeners();
+
+        // Recover unassigned pending incidents automatically
+        setTimeout(async () => {
+            try {
+                const { data: orphans } = await supabase.from(DB_TABLES.INCIDENTS).select('*').eq('status', 'pending');
+                if (orphans && orphans.length > 0) {
+                    EngineUI.log('DISPATCH', `Found ${orphans.length} pending missions. Auto-dispatching...`, 'warn');
+                    orphans.forEach(inc => window.dispatchEvent(new CustomEvent('engine:incident_ready', { detail: inc })));
+                }
+            } catch(e) {}
+        }, 3000);
     },
 
     listenForIncidentReady() {
@@ -84,14 +95,7 @@ export const EngineDispatch = {
             return;
         }
 
-        const maxRetries = 5;
-
-        if (state.retries >= maxRetries) {
-            EngineUI.log('DISPATCH', `CRITICAL: Incident #${incidentId} FAILED to find resources after ${maxRetries} attempts. Terminating.`, 'alert');
-            await supabase.from(DB_TABLES.INCIDENTS).update({ status: 'completed' }).eq('id', incidentId);
-            this.stopDispatch(incidentId);
-            return;
-        }
+        // Removed maxRetries limit. Dispatcher will keep trying until manual cancellation or success.
 
         const incLat = parseFloat(state.incident.latitude || state.incident.lat);
         const incLng = parseFloat(state.incident.longitude || state.incident.lng);
@@ -173,6 +177,10 @@ export const EngineDispatch = {
                 if (isIncidentCancelled(newInc.status) && !isIncidentCancelled(oldInc.status)) {
                     console.log(`[LIFECYCLE] DISPATCH: DB-driven stop for cancelled INC#${newInc.id}`);
                     this.stopDispatch(newInc.id);
+                    if (newInc.assigned_ambulance_id) {
+                        supabase.from(DB_TABLES.AMBULANCES).update({ status: 'available' }).eq('id', newInc.assigned_ambulance_id)
+                        .then(() => EngineUI.log('DISPATCH', `Unit ${newInc.assigned_ambulance_id} released due to cancellation.`, 'success'));
+                    }
                 }
             }).subscribe();
     },
@@ -313,17 +321,10 @@ export const EngineDispatch = {
     },
 
     handleNoResources(incident, attempts) {
-        const maxRetries = 5;
-        const delayMs = 5000 * Math.pow(2, attempts - 1);
+        // Cap delay at 15 seconds to keep trying frequently
+        const delayMs = Math.min(5000 * attempts, 15000); 
 
-        if (attempts >= maxRetries) {
-            EngineUI.log('DISPATCH', `CRITICAL: No units available. FAILED to dispatch.`, 'alert');
-            supabase.from(DB_TABLES.INCIDENTS).update({ status: 'completed' }).eq('id', incident.id).catch(()=>{});
-            this.dispatchState.delete(incident.id);
-            return;
-        }
-
-        EngineUI.log('DISPATCH', `No resources found. Retrying in ${delayMs/1000}s... (Attempt ${attempts}/${maxRetries})`, 'alert');
+        EngineUI.log('DISPATCH', `No resources found. Retrying in ${delayMs/1000}s... (Attempt ${attempts})`, 'alert');
 
         if (!this.dispatchState.has(incident.id)) {
             this.dispatchState.set(incident.id, { incident, retries: attempts, failedAmbulances: new Set(), timer: null });
